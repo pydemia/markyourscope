@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { indentationGuides } from "./indentation";
 import { analyzeScopes, scopesAt, type ScopeAnalysis } from "./scope";
+import { visibleLineIntersections } from "./visible";
 
 const MAX_LINES = 20_000;
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -109,9 +110,12 @@ export function activate(context: vscode.ExtensionContext): void {
         const guides: vscode.Range[] = [];
         if (config.get<string>("indentation.style", "line") === "line") {
             const seen = new Set<number>();
-            for (const visible of editor.visibleRanges) {
-                for (let line = visible.start.line;
-                    line <= visible.end.line && line < document.lineCount;
+            for (const visible of visibleLineIntersections(
+                { startLine: 0, endLine: document.lineCount - 1 },
+                editor.visibleRanges,
+            )) {
+                for (let line = visible.startLine;
+                    line <= visible.endLine;
                     line++) {
                     if (seen.has(line)) continue;
                     seen.add(line);
@@ -163,15 +167,28 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const start = document.positionAt(scope.start).line;
         const end = document.positionAt(scope.end - 1).line;
-        const scopeRange = new vscode.Range(
-            start,
-            0,
-            end,
-            document.lineAt(end).text.length,
+        const visible = visibleLineIntersections(
+            { startLine: start, endLine: end },
+            editor.visibleRanges,
         );
-        editor.setDecorations(scopeDecoration, [scopeRange]);
-        editor.setDecorations(startDecoration, [lineRange(document, start)]);
-        editor.setDecorations(endDecoration, [lineRange(document, end)]);
+        const scopeRanges = visible.map(({ startLine, endLine }) =>
+            new vscode.Range(
+                startLine,
+                0,
+                endLine,
+                document.lineAt(endLine).text.length,
+            ));
+        editor.setDecorations(scopeDecoration, scopeRanges);
+        editor.setDecorations(
+            startDecoration,
+            visible.some((range) => range.startLine <= start &&
+                start <= range.endLine) ? [lineRange(document, start)] : [],
+        );
+        editor.setDecorations(
+            endDecoration,
+            visible.some((range) => range.startLine <= end &&
+                end <= range.endLine) ? [lineRange(document, end)] : [],
+        );
         if (editor === vscode.window.activeTextEditor) {
             status.text = `Scope: ${scope.kind} · L${start + 1}–L${end + 1}`;
             status.show();

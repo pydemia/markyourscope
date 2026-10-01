@@ -58,6 +58,20 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
 - VSIX 생성기는 라이선스 파일 부재를 경고했다. 설치 ID에 publisher가
   정의되지 않았으므로 공개 배포 전 라이선스·publisher를 확정해야 한다.
 
+## 2026-10-01 재검증: 보이는 영역 장식
+
+- 전체 범위 한 개를 전달하던 배경 장식을 `visibleRanges`와 범위의
+  교집합으로 제한했다. 시작·끝 경계도 해당 행이 보일 때만 전달한다.
+- `npm run check`, `npm test` 15/15, `npm run test:host`가
+  VS Code 1.140.0에서 통과했다. 호스트 검사는 활성화·명령 실행을
+  확인하며 픽셀 위치, 접힘·줄바꿈·고대비 공존은 확인하지 않는다.
+- 변경 전 합성 10,000행 분석은 TypeScript 58.74ms, Python 59.11ms,
+  분석 후 범위 선택 p95는 각각 0.061ms, 0.056ms였다.
+  장식 API 호출 지연이나 실제 화면 갱신 수치로 해석하지 않는다.
+- 보이는 영역 교집합의 분리 구간과 마지막 행 경계는 단위 테스트로
+  확인했다. 실제 편집기의 접힘·줄바꿈에서 `visibleRanges`가 어떻게
+  전달되는지는 화면에서 계속 확인해야 한다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),
