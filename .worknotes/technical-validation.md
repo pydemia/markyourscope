@@ -107,6 +107,22 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
 오류가 많은 Python 문서에서는 편집 중 지연 위험이 남는다. 출시
 제한 또는 분석 예약 방식은 상세 설계에서 결정한다.
 
+## 2026-10-01 VSIX 사전 패키징·설치
+
+- Apache-2.0 전문을 [공식 원문](https://www.apache.org/licenses/LICENSE-2.0.txt)
+  에서 가져와 루트 `LICENSE`에 두었다. 번들에 포함된 TypeScript와
+  Lezer 패키지의 라이선스·고지도 별도 파일로 포함했다.
+- `npm run package:vsix`가 성공했고 VSIX 내부에
+  `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`, 각 의존성 고지가
+  들어 있음을 패키지 목록에서 확인했다. 현재 번들 JS는 9.69MB,
+  VSIX는 1.64MB다.
+- 별도 사용자 데이터·확장 디렉터리에 VSIX를 설치했다.
+  `--list-extensions --show-versions` 결과는
+  `pydemia.mark-your-scope@0.0.1`이다. 같은 프로필의 일반
+  VS Code 창에서 Python 범위 표시를 화면으로 확인했다.
+- 이 VSIX는 출시 전 `0.0.1` 사전 패키지다. Marketplace 게시,
+  GitHub Release 첨부, 최종 버전의 양쪽 채널 설치 결과는 아니다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),

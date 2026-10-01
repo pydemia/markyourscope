@@ -2,8 +2,9 @@
   "name": "mark-your-scope",
   "displayName": "Mark Your Scope",
   "description": "Explore indentation and the current syntax scope in VS Code.",
+  "publisher": "pydemia",
+  "license": "Apache-2.0",
   "version": "0.0.1",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"
@@ -76,7 +77,8 @@
     "test:host": "npm run build && node test/host/run.cjs",
     "benchmark": "tsx scripts/benchmark.ts",
     "benchmark:host": "npm run build && node test/host/run.cjs benchmark.cjs",
-    "stress": "tsx scripts/stress.ts"
+    "stress": "tsx scripts/stress.ts",
+    "package:vsix": "npm run build && vsce package --out .vscode-test/mark-your-scope-preview.vsix"
   },
   "dependencies": {
     "@lezer/python": "^1.1.19",
@@ -86,6 +88,7 @@
     "@types/node": "^24.0.0",
     "@types/vscode": "^1.138.0",
     "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15"
   }
