@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Mark Your Scope logo</title>
+  <g transform="rotate(-10 128 128)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M103 30H40Q30 30 30 40V216Q30 226 40 226H103" stroke="#23435e" stroke-width="20"/>
+    <path d="M153 30H216Q226 30 226 40V216Q226 226 216 226H153" stroke="#23435e" stroke-width="20"/>
+    <path d="M108 70H80Q70 70 70 80V176Q70 186 80 186H108" stroke="#89b6ae" stroke-width="16"/>
+    <path d="M148 70H176Q186 70 186 80V176Q186 186 176 186H148" stroke="#89b6ae" stroke-width="16"/>
+    <path d="M102 92H154M102 164H154" stroke="#c4d0cf" stroke-width="10"/>
+    <path d="M93 128H163" stroke="#e5a26d" stroke-width="24"/>
+  </g>
+</svg>
