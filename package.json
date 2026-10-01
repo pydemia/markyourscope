@@ -1,0 +1,86 @@
+{
+  "name": "mark-your-scope",
+  "displayName": "Mark Your Scope",
+  "description": "Explore indentation and the current syntax scope in VS Code.",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "vscode": "^1.138.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "markYourScope.focusParentScope",
+        "title": "Mark Your Scope: Focus Parent Scope"
+      },
+      {
+        "command": "markYourScope.resetScopeFocus",
+        "title": "Mark Your Scope: Reset Scope Focus"
+      }
+    ],
+    "configuration": {
+      "title": "Mark Your Scope",
+      "properties": {
+        "markYourScope.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show indentation and current syntax scope."
+        },
+        "markYourScope.indentation.style": {
+          "type": "string",
+          "enum": [
+            "line",
+            "off"
+          ],
+          "default": "line",
+          "description": "Show subtle indentation guides or hide them."
+        },
+        "markYourScope.focus.target": {
+          "type": "string",
+          "enum": [
+            "block",
+            "expression"
+          ],
+          "default": "block",
+          "description": "Choose structural blocks or the nearest expression."
+        },
+        "markYourScope.excludedLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "plaintext",
+            "markdown"
+          ],
+          "description": "Languages where the extension displays nothing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "check": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "test:host": "npm run build && node test/host/run.cjs",
+    "benchmark": "tsx scripts/benchmark.ts"
+  },
+  "dependencies": {
+    "@lezer/python": "^1.1.19",
+    "typescript": "~6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.138.0",
+    "@vscode/test-electron": "^3.1.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15"
+  }
+}
