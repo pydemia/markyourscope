@@ -122,6 +122,10 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
   VS Code 창에서 Python 범위 표시를 화면으로 확인했다.
 - 이 VSIX는 출시 전 `0.0.1` 사전 패키지다. Marketplace 게시,
   GitHub Release 첨부, 최종 버전의 양쪽 채널 설치 결과는 아니다.
+- TypeScript 제3자 고지 원문의 후행 공백 때문에 최초 staged
+  `git diff --check`가 실패했다. 고지 내용을 유지하도록
+  `.gitattributes`에 해당 텍스트만 공백 검사 예외를 명시했고,
+  `git diff HEAD^ HEAD --check`를 다시 실행해 통과했다.
 
 ## 작업 지침
 
