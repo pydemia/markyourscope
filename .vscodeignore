@@ -3,6 +3,7 @@
 .vscode/**
 .vscode-test/**
 .worknotes/**
+docs/**
 node_modules/**
 src/**
 test/**
