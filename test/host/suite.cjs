@@ -13,6 +13,8 @@ exports.run = async function run() {
     assert.ok(commands.includes("markYourScope.resetScopeFocus"));
     assert.ok(commands.includes("markYourScope.toggleScopeHighlight"));
     assert.ok(commands.includes("markYourScope.chooseDisplayMode"));
+    assert.ok(commands.includes("markYourScope.choosePalette"));
+    assert.ok(commands.includes("markYourScope.resetPalette"));
 
     const document = await vscode.workspace.openTextDocument(
         path.resolve(__dirname, "../fixtures/sample.py"),
@@ -72,10 +74,46 @@ exports.run = async function run() {
     assert.equal(updatedConfiguration.get("focus.target"), "lines");
     await vscode.commands.executeCommand(
         "markYourScope.toggleScopeHighlight");
+    await configuration.update(
+        "palette", "lightSoft", vscode.ConfigurationTarget.Global);
+    assert.equal(vscode.workspace.getConfiguration(
+        "markYourScope",
+        { uri: liveDocument.uri, languageId: liveDocument.languageId },
+    ).get("palette"), "lightSoft");
+    const currentPalette = () => vscode.workspace.getConfiguration(
+        "markYourScope",
+        { uri: liveDocument.uri, languageId: liveDocument.languageId },
+    ).get("palette");
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 400));
+    const cancelledPalette = vscode.commands.executeCommand(
+        "markYourScope.choosePalette");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.quickOpenSelectNext");
+    await vscode.commands.executeCommand("workbench.action.closeQuickOpen");
+    await cancelledPalette;
+    assert.equal(currentPalette(), "lightSoft",
+        "cancelling palette preview preserves the setting");
+
+    const savedPalette = vscode.commands.executeCommand(
+        "markYourScope.choosePalette");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.quickOpenSelectNext");
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await savedPalette;
+    assert.equal(currentPalette(), "highContrast",
+        "palette save persists the selected preset");
     await vscode.commands.executeCommand(
         "markYourScope.toggleScopeHighlight");
     await configuration.update(
         "mode", undefined, vscode.ConfigurationTarget.Global);
     await configuration.update(
         "focus.target", undefined, vscode.ConfigurationTarget.Global);
+    await configuration.update(
+        "palette", undefined, vscode.ConfigurationTarget.Global);
 };

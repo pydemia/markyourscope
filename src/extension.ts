@@ -6,7 +6,17 @@ import {
     type FocusTarget,
     type IndentationStyle,
 } from "./display";
+import {
+    EditorDecorations,
+    type DecorationSet,
+} from "./editor-decorations";
 import { indentationBands, indentationGuides } from "./indentation";
+import {
+    paletteColors,
+    paletteId,
+    type PaletteId,
+    type ThemeKind,
+} from "./palette";
 import { analyzeScopes, scopesAt, type ScopeAnalysis } from "./scope";
 import { visibleLineIntersections } from "./visible";
 
@@ -27,37 +37,7 @@ interface EditorFocus {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-    const indentDecoration = vscode.window.createTextEditorDecorationType({
-        borderColor: new vscode.ThemeColor("editorIndentGuide.background1"),
-        borderStyle: "solid",
-        borderWidth: "0 0 0 1px",
-    });
-    const indentBandEven = vscode.window.createTextEditorDecorationType({
-        backgroundColor: "rgba(128, 128, 128, 0.08)",
-    });
-    const indentBandOdd = vscode.window.createTextEditorDecorationType({
-        backgroundColor: "rgba(128, 128, 128, 0.04)",
-    });
-    const scopeDecoration = vscode.window.createTextEditorDecorationType({
-        backgroundColor: "rgba(128, 128, 128, 0.08)",
-        isWholeLine: true,
-    });
-    const focusScopeDecoration = vscode.window.createTextEditorDecorationType({
-        backgroundColor: "rgba(128, 128, 128, 0.16)",
-        isWholeLine: true,
-    });
-    const startDecoration = vscode.window.createTextEditorDecorationType({
-        borderColor: new vscode.ThemeColor("editorInfo.foreground"),
-        borderStyle: "solid",
-        borderWidth: "1px 0 0 0",
-        isWholeLine: true,
-    });
-    const endDecoration = vscode.window.createTextEditorDecorationType({
-        borderColor: new vscode.ThemeColor("editorInfo.foreground"),
-        borderStyle: "solid",
-        borderWidth: "0 0 1px 0",
-        isWholeLine: true,
-    });
+    const decorations = new EditorDecorations();
     const status = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100,
@@ -65,6 +45,9 @@ export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel("Mark Your Scope");
     const analysisCache = new Map<string, CachedAnalysis>();
     const editorFocus = new Map<vscode.TextEditor, EditorFocus>();
+    let previousVisible = new Set(vscode.window.visibleTextEditors);
+    const palettePreview = new Map<vscode.TextEditor, PaletteId>();
+    const reportedInvalidColors = new Set<string>();
     let scopeToggleEnabled = true;
     const analysisScheduler = new AnalysisScheduler(75, (key, version) => {
         for (const editor of vscode.window.visibleTextEditors) {
@@ -73,30 +56,24 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     });
     context.subscriptions.push(
-        indentDecoration,
-        indentBandEven,
-        indentBandOdd,
-        scopeDecoration,
-        focusScopeDecoration,
-        startDecoration,
-        endDecoration,
+        decorations,
         status,
         output,
         analysisScheduler,
     );
 
-    function clearScope(editor: vscode.TextEditor): void {
-        editor.setDecorations(scopeDecoration, []);
-        editor.setDecorations(focusScopeDecoration, []);
-        editor.setDecorations(startDecoration, []);
-        editor.setDecorations(endDecoration, []);
+    function clearScope(
+        editor: vscode.TextEditor,
+        types: DecorationSet,
+    ): void {
+        editor.setDecorations(types.scopeBalanced, []);
+        editor.setDecorations(types.scopeFocus, []);
+        editor.setDecorations(types.start, []);
+        editor.setDecorations(types.end, []);
     }
 
     function clear(editor: vscode.TextEditor): void {
-        editor.setDecorations(indentDecoration, []);
-        editor.setDecorations(indentBandEven, []);
-        editor.setDecorations(indentBandOdd, []);
-        clearScope(editor);
+        decorations.release(editor);
         if (editor === vscode.window.activeTextEditor) status.hide();
     }
 
@@ -161,8 +138,48 @@ export function activate(context: vscode.ExtensionContext): void {
             style === "off" ? style : undefined;
     }
 
+    function themeKind(): ThemeKind {
+        switch (vscode.window.activeColorTheme.kind) {
+            case vscode.ColorThemeKind.Light:
+                return "light";
+            case vscode.ColorThemeKind.HighContrast:
+                return "highContrast";
+            case vscode.ColorThemeKind.HighContrastLight:
+                return "highContrastLight";
+            default:
+                return "dark";
+        }
+    }
+
+    function editorTypes(
+        editor: vscode.TextEditor,
+        config: vscode.WorkspaceConfiguration,
+    ): DecorationSet {
+        const setting = palettePreview.get(editor) ??
+            paletteId(config.get<string>("palette", "auto"));
+        const rawCustom = config.get<unknown>("palette.customColors", {});
+        const custom = rawCustom && typeof rawCustom === "object" &&
+            !Array.isArray(rawCustom)
+            ? rawCustom as Record<string, unknown> : {};
+        const result = paletteColors(setting, themeKind(), custom);
+        if (result.invalidKeys.length > 0) {
+            const signature = JSON.stringify(result.invalidKeys.map(
+                (key) => [key, custom[key]]));
+            if (!reportedInvalidColors.has(signature)) {
+                reportedInvalidColors.add(signature);
+                const message = "Invalid Mark Your Scope color: " +
+                    result.invalidKeys.join(", ") +
+                    ". Palette defaults are used for those values.";
+                output.appendLine(message);
+                void vscode.window.showWarningMessage(message);
+            }
+        }
+        return decorations.get(editor, result.colors);
+    }
+
     function paintRange(
         editor: vscode.TextEditor,
+        types: DecorationSet,
         start: number,
         end: number,
         background: "balanced" | "focus" | "none",
@@ -180,16 +197,16 @@ export function activate(context: vscode.ExtensionContext): void {
                 document.lineAt(endLine).text.length,
             ));
         editor.setDecorations(
-            scopeDecoration, background === "balanced" ? ranges : []);
+            types.scopeBalanced, background === "balanced" ? ranges : []);
         editor.setDecorations(
-            focusScopeDecoration, background === "focus" ? ranges : []);
+            types.scopeFocus, background === "focus" ? ranges : []);
         editor.setDecorations(
-            startDecoration,
+            types.start,
             visible.some((range) => range.startLine <= start &&
                 start <= range.endLine) ? [lineRange(document, start)] : [],
         );
         editor.setDecorations(
-            endDecoration,
+            types.end,
             visible.some((range) => range.startLine <= end &&
                 end <= range.endLine) ? [lineRange(document, end)] : [],
         );
@@ -235,12 +252,147 @@ export function activate(context: vscode.ExtensionContext): void {
         };
     }
 
+    function editorConfiguration(
+        editor: vscode.TextEditor,
+    ): vscode.WorkspaceConfiguration {
+        return vscode.workspace.getConfiguration("markYourScope", {
+            uri: editor.document.uri,
+            languageId: editor.document.languageId,
+        });
+    }
+
+    type PaletteLocation = vscode.QuickPickItem & {
+        target: vscode.ConfigurationTarget;
+        inLanguage: boolean;
+    };
+
+    function paletteLocations(
+        editor: vscode.TextEditor,
+        config: vscode.WorkspaceConfiguration,
+    ): PaletteLocation[] {
+        const inspected = config.inspect<string>("palette");
+        const locations: PaletteLocation[] = [{
+            label: "User settings",
+            description: inspected?.globalLanguageValue !== undefined
+                ? "Current language override" : undefined,
+            target: vscode.ConfigurationTarget.Global,
+            inLanguage: inspected?.globalLanguageValue !== undefined,
+        }];
+        if (vscode.workspace.workspaceFolders?.length) {
+            locations.push({
+                label: "Workspace settings",
+                description: inspected?.workspaceLanguageValue !== undefined
+                    ? "Current language override" : undefined,
+                target: vscode.ConfigurationTarget.Workspace,
+                inLanguage: inspected?.workspaceLanguageValue !== undefined,
+            });
+        }
+        const folder = vscode.workspace.getWorkspaceFolder(
+            editor.document.uri);
+        if (folder && (vscode.workspace.workspaceFolders?.length ?? 0) > 1) {
+            locations.push({
+                label: `Folder: ${folder.name}`,
+                description:
+                    inspected?.workspaceFolderLanguageValue !== undefined
+                        ? "Current language override" : undefined,
+                target: vscode.ConfigurationTarget.WorkspaceFolder,
+                inLanguage:
+                    inspected?.workspaceFolderLanguageValue !== undefined,
+            });
+        }
+        return locations;
+    }
+
+    function previewPalette(
+        editor: vscode.TextEditor,
+        palette?: PaletteId,
+    ): void {
+        if (palette) palettePreview.set(editor, palette);
+        else palettePreview.delete(editor);
+        if (vscode.window.visibleTextEditors.includes(editor)) render(editor);
+    }
+
+    async function choosePalette(): Promise<void> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+        const config = editorConfiguration(editor);
+        const items: Array<vscode.QuickPickItem & {
+            id: PaletteId;
+        }> = [
+            { label: "Auto", id: "auto" },
+            { label: "Dark Soft", id: "darkSoft" },
+            { label: "Light Soft", id: "lightSoft" },
+            { label: "High Contrast", id: "highContrast" },
+            { label: "Monochrome", id: "monochrome" },
+        ];
+        const picker = vscode.window.createQuickPick<typeof items[number]>();
+        picker.items = items;
+        picker.placeholder = "Preview a palette; Esc restores the original";
+        picker.activeItems = items.filter((item) => item.id ===
+            paletteId(config.get<string>("palette", "auto")));
+        const selected = await new Promise<PaletteId | undefined>(
+            (resolve) => {
+                let accepted: PaletteId | undefined;
+                picker.onDidChangeActive(([item]) => {
+                    if (item) previewPalette(editor, item.id);
+                });
+                picker.onDidAccept(() => {
+                    accepted = (picker.selectedItems[0] ??
+                        picker.activeItems[0])?.id;
+                    picker.hide();
+                });
+                picker.onDidHide(() => {
+                    picker.dispose();
+                    resolve(accepted);
+                });
+                picker.show();
+            });
+        if (!selected) {
+            previewPalette(editor);
+            return;
+        }
+        const location = await vscode.window.showQuickPick(
+            paletteLocations(editor, config),
+            { placeHolder: "Save palette in" },
+        );
+        if (!location) {
+            previewPalette(editor);
+            return;
+        }
+        try {
+            await config.update(
+                "palette", selected, location.target,
+                location.inLanguage);
+        } catch (error) {
+            void vscode.window.showErrorMessage(
+                `Could not save palette: ${String(error)}`);
+        } finally {
+            previewPalette(editor);
+        }
+    }
+
+    async function resetPalette(): Promise<void> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+        const config = editorConfiguration(editor);
+        const location = await vscode.window.showQuickPick(
+            paletteLocations(editor, config),
+            { placeHolder: "Reset palette in" },
+        );
+        if (!location) return;
+        try {
+            await config.update(
+                "palette", undefined, location.target,
+                location.inLanguage);
+        } catch (error) {
+            void vscode.window.showErrorMessage(
+                `Could not reset palette: ${String(error)}`);
+        }
+    }
+
     function render(editor: vscode.TextEditor): void {
         const document = editor.document;
-        const config = vscode.workspace.getConfiguration(
-            "markYourScope",
-            { uri: document.uri, languageId: document.languageId },
-        );
+        const config = editorConfiguration(editor);
         const excluded = config.get<string[]>("excludedLanguages", []);
         if (!config.get<boolean>("enabled", true) ||
             excluded.includes(document.languageId)) {
@@ -263,6 +415,7 @@ export function activate(context: vscode.ExtensionContext): void {
             clear(editor);
             return;
         }
+        const types = editorTypes(editor, config);
 
         const tabSize = typeof editor.options.tabSize === "number"
             ? editor.options.tabSize : 4;
@@ -306,12 +459,12 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
             }
         }
-        editor.setDecorations(indentDecoration, guides);
-        editor.setDecorations(indentBandEven, evenBands);
-        editor.setDecorations(indentBandOdd, oddBands);
+        editor.setDecorations(types.indentLine, guides);
+        editor.setDecorations(types.indentBandEven, evenBands);
+        editor.setDecorations(types.indentBandOdd, oddBands);
 
         if (!display.showScope) {
-            clearScope(editor);
+            clearScope(editor, types);
             if (editor === vscode.window.activeTextEditor) status.hide();
             return;
         }
@@ -324,7 +477,8 @@ export function activate(context: vscode.ExtensionContext): void {
                 document.lineCount - 1,
                 anchor.line + display.contextLines,
             );
-            paintRange(editor, start, end, display.scopeBackground);
+            paintRange(
+                editor, types, start, end, display.scopeBackground);
             if (editor === vscode.window.activeTextEditor) {
                 status.text = `Scope: 주변 L${start + 1}–L${end + 1}`;
                 status.show();
@@ -334,7 +488,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         if (analysisScheduler.isPending(
             document.uri.toString(), document.version)) {
-            clearScope(editor);
+            clearScope(editor, types);
             if (editor === vscode.window.activeTextEditor) {
                 status.text = "Scope: 분석 중";
                 status.show();
@@ -354,7 +508,7 @@ export function activate(context: vscode.ExtensionContext): void {
             : [];
         const scope = candidates[Math.min(parentIndex, candidates.length - 1)];
         if (!scope) {
-            clearScope(editor);
+            clearScope(editor, types);
             if (editor === vscode.window.activeTextEditor) {
                 status.text = analysis === null
                     ? "Scope: 파일 크기 제한"
@@ -372,7 +526,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const start = document.positionAt(scope.start).line;
         const end = document.positionAt(scope.end - 1).line;
-        paintRange(editor, start, end, display.scopeBackground);
+        paintRange(editor, types, start, end, display.scopeBackground);
         if (editor === vscode.window.activeTextEditor) {
             status.text = `Scope: ${scope.kind} · L${start + 1}–L${end + 1}`;
             status.show();
@@ -384,6 +538,10 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "markYourScope.choosePalette", choosePalette),
+        vscode.commands.registerCommand(
+            "markYourScope.resetPalette", resetPalette),
         vscode.commands.registerCommand(
             "markYourScope.toggleScopeHighlight",
             () => {
@@ -464,8 +622,16 @@ export function activate(context: vscode.ExtensionContext): void {
             for (const editor of editorFocus.keys()) {
                 if (!editors.includes(editor)) editorFocus.delete(editor);
             }
+            for (const editor of previousVisible) {
+                if (!editors.includes(editor)) {
+                    decorations.release(editor);
+                    palettePreview.delete(editor);
+                }
+            }
+            previousVisible = new Set(editors);
             renderAll();
         }),
+        vscode.window.onDidChangeActiveColorTheme(() => renderAll()),
         vscode.window.onDidChangeActiveTextEditor((editor) => {
             if (editor) render(editor);
             else status.hide();

@@ -36,6 +36,14 @@
       {
         "command": "markYourScope.chooseDisplayMode",
         "title": "Mark Your Scope: Choose Display Mode"
+      },
+      {
+        "command": "markYourScope.choosePalette",
+        "title": "Mark Your Scope: Choose Palette"
+      },
+      {
+        "command": "markYourScope.resetPalette",
+        "title": "Mark Your Scope: Reset Palette"
       }
     ],
     "configuration": {
@@ -83,6 +91,32 @@
           "maximum": 100,
           "default": 3,
           "description": "Logical lines above and below the cursor in lines mode."
+        },
+        "markYourScope.palette": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "darkSoft",
+            "lightSoft",
+            "highContrast",
+            "monochrome"
+          ],
+          "default": "auto",
+          "description": "Choose an editor decoration color palette."
+        },
+        "markYourScope.palette.customColors": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "properties": {
+            "indentLine": { "type": "string" },
+            "indentBandEven": { "type": "string" },
+            "indentBandOdd": { "type": "string" },
+            "scopeBalanced": { "type": "string" },
+            "scopeFocus": { "type": "string" },
+            "boundary": { "type": "string" }
+          },
+          "description": "Optional #RRGGBB or #RRGGBBAA overrides; invalid entries use palette defaults."
         },
         "markYourScope.excludedLanguages": {
           "type": "array",
