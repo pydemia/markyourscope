@@ -74,7 +74,8 @@
     "check": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "test:host": "npm run build && node test/host/run.cjs",
-    "benchmark": "tsx scripts/benchmark.ts"
+    "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:host": "npm run build && node test/host/run.cjs benchmark.cjs"
   },
   "dependencies": {
     "@lezer/python": "^1.1.19",

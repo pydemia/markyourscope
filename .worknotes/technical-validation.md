@@ -77,6 +77,19 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
   남았는지 또는 두 열의 장식이 서로 독립적인지를 시각적으로 증명하지
   않으므로 실제 화면 검증은 미완료다.
 
+## 2026-10-01 커서 이동 호스트 측정
+
+- Windows x64, VS Code 1.140.0 Extension Host의 10,001행 TypeScript
+  문서에서 최초 분석 이후 커서를 화면 안의 두 행 사이로 20회
+  예열하고 200회 이동했다. `npm run benchmark:host` 결과는
+  선택 대입부터 선택 이벤트 처리 다음 이벤트 루프까지 p95
+  25.25ms, 최대 61.22ms였다.
+- 이 구간은 확장의 `setDecorations` 반환까지를 포함하는 보수적인
+  상한 측정이며 VS Code 이벤트 전달과 테스트의 다음 루프 대기도
+  포함한다. 실제 화면 픽셀 갱신 시각은 측정하지 않았다.
+- 한 번의 200회 측정에서 p95 50ms 목표 이내였다. 다른 장비와
+  다중 확장 환경에 대한 보증은 아니다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),
