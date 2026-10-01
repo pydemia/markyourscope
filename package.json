@@ -75,7 +75,8 @@
     "test": "tsx --test test/*.test.ts",
     "test:host": "npm run build && node test/host/run.cjs",
     "benchmark": "tsx scripts/benchmark.ts",
-    "benchmark:host": "npm run build && node test/host/run.cjs benchmark.cjs"
+    "benchmark:host": "npm run build && node test/host/run.cjs benchmark.cjs",
+    "stress": "tsx scripts/stress.ts"
   },
   "dependencies": {
     "@lezer/python": "^1.1.19",

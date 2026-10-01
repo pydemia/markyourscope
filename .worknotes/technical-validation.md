@@ -90,6 +90,23 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
 - 한 번의 200회 측정에서 p95 50ms 목표 이내였다. 다른 장비와
   다중 확장 환경에 대한 보증은 아니다.
 
+## 2026-10-01 병적 입력 측정
+
+`npm run stress`로 20,000행·2MB보다 작은 입력을 각각 한 번
+분석했다. 수치는 이 Windows x64 프로세스의 참고값이다.
+
+| 입력 | 크기 | 결과 |
+| --- | --- | --- |
+| TypeScript 100만 글자 단일 행 | 1,000,018바이트 | 13.34ms, 정상 |
+| TypeScript 2,000단계 중첩 | 4,003행, 30,027바이트 | 6.61ms 후 `RangeError: Maximum call stack size exceeded` |
+| TypeScript 오류 반복 | 3,000행, 63,000바이트 | 64.23ms, 구문 미확정 |
+| Python 오류 반복 | 6,000행, 63,000바이트 | 184.08ms, 구문 미확정 |
+
+중첩 예외는 확장 Host의 `analyze` 예외 처리에서 해당 문서의 구문
+장식을 지우고 분석 오류 상태로 전환된다. 파서 호출이 동기식이라
+오류가 많은 Python 문서에서는 편집 중 지연 위험이 남는다. 출시
+제한 또는 분석 예약 방식은 상세 설계에서 결정한다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),
