@@ -35,14 +35,49 @@ function blockKind(parent: ts.Node): string {
     return "block";
 }
 
-function parseTypeScript(text: string, language: string): Scope[] {
+function parseTypeScript(text: string, language: string): ScopeAnalysis {
+    if (language === "json") {
+        try {
+            JSON.parse(text);
+        } catch {
+            return { state: "unresolved", scopes: [] };
+        }
+    }
+    const fileName = `scope.${language === "json" ? "json" :
+        language === "javascript" ? "js" : "ts"}`;
     const source = ts.createSourceFile(
-        `scope.${language === "json" ? "json" : "ts"}`,
+        fileName,
         text,
         ts.ScriptTarget.Latest,
         true,
         scriptKinds[language],
     );
+    const host: ts.CompilerHost = {
+        getSourceFile: (name) => name === fileName ? source : undefined,
+        getDefaultLibFileName: () => "",
+        writeFile: () => undefined,
+        getCurrentDirectory: () => "",
+        getDirectories: () => [],
+        fileExists: (name) => name === fileName,
+        readFile: (name) => name === fileName ? text : undefined,
+        useCaseSensitiveFileNames: () => true,
+        getCanonicalFileName: (name) => name,
+        getNewLine: () => "\n",
+    };
+    const diagnostics = language === "json" ? [] : ts.createProgram([fileName], {
+        allowJs: language === "javascript",
+        noLib: true,
+        noResolve: true,
+    }, host).getSyntacticDiagnostics(source)
+    if (diagnostics.some((diagnostic) => diagnostic.start === undefined)) {
+        return { state: "unresolved", scopes: [] };
+    }
+    const errors = diagnostics
+        .filter((diagnostic) => diagnostic.start !== undefined)
+        .map((diagnostic) => ({
+            start: diagnostic.start!,
+            end: diagnostic.start! + (diagnostic.length ?? 0),
+        }));
     const scopes: Scope[] = [];
 
     function visit(node: ts.Node): void {
@@ -101,7 +136,11 @@ function parseTypeScript(text: string, language: string): Scope[] {
     }
 
     visit(source);
-    return scopes;
+    return {
+        state: errors.length > 0 ? "unresolved" : "supported",
+        scopes: scopes.filter((scope) => !errors.some((error) =>
+            scope.start <= error.start && error.end <= scope.end)),
+    };
 }
 
 const pythonBlocks: Record<string, string> = {
@@ -158,7 +197,7 @@ function parsePython(text: string): ScopeAnalysis {
 export function analyzeScopes(text: string, language: string): ScopeAnalysis {
     if (language === "python") return parsePython(text);
     if (scriptKinds[language] !== undefined) {
-        return { state: "supported", scopes: parseTypeScript(text, language) };
+        return parseTypeScript(text, language);
     }
     return { state: "unsupported", scopes: [] };
 }

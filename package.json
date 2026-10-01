@@ -4,6 +4,10 @@
   "description": "Explore indentation and the current syntax scope in VS Code.",
   "version": "0.0.1",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pydemia/markyourscope.git"
+  },
   "engines": {
     "vscode": "^1.138.0"
   },

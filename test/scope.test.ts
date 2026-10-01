@@ -97,6 +97,40 @@ test("Unclosed TypeScript block is not selected", () => {
     );
 });
 
+test("TypeScript syntax error suppresses its enclosing scope", () => {
+    const broken = "if (ready) { save( }";
+    const result = analyzeScopes(broken, "typescript");
+    assert.equal(result.state, "unresolved");
+    assert.deepEqual(scopesAt(result.scopes, broken.indexOf("save"), "block"), []);
+
+    const repaired = "if (ready) { save(); }";
+    const recovered = analyzeScopes(repaired, "typescript");
+    assert.equal(recovered.state, "supported");
+    assert.deepEqual(
+        scopesAt(recovered.scopes, repaired.indexOf("save"), "block")
+            .map((scope) => scope.kind),
+        ["if"],
+    );
+});
+
+test("Syntax error in one block preserves a separate valid block", () => {
+    const text = "if (bad) { save( }\nif (good) { retry(); }";
+    const result = analyzeScopes(text, "javascript");
+    assert.equal(result.state, "unresolved");
+    assert.deepEqual(
+        scopesAt(result.scopes, text.indexOf("retry"), "block")
+            .map((scope) => scope.kind),
+        ["if"],
+    );
+});
+
+test("JSON syntax error does not retain an enclosing object", () => {
+    const text = '{"items": [1,]}';
+    const result = analyzeScopes(text, "json");
+    assert.equal(result.state, "unresolved");
+    assert.deepEqual(scopesAt(result.scopes, text.indexOf("items"), "block"), []);
+});
+
 test("Unsupported language has a distinct state", () => {
     assert.deepEqual(analyzeScopes("a:\n    b\n", "yaml"), {
         state: "unsupported",

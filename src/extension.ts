@@ -154,7 +154,7 @@ export function activate(context: vscode.ExtensionContext): void {
                         : analysis.state === "failed"
                             ? "Scope: 분석 오류"
                         : analysis.state === "unresolved"
-                            ? "Scope: 범위 확인 중"
+                            ? "Scope: 구문 확인 불가"
                             : "Scope: 범위 없음";
                 status.show();
             }
