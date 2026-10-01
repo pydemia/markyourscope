@@ -80,3 +80,20 @@ GitHub Release
 임을 확인했다. 다운로드한 파일을 또 다른 격리 디렉터리에 설치했고
 `pydemia.mark-your-scope@0.1.0`이 목록에 나타났다.
 Marketplace는 아직 게시되지 않아 전체 배포 완료로 판정하지 않는다.
+
+## 2026-10-01 Marketplace 게시 확인
+
+이전 `vsce` 형식의 Windows 자격 증명을 현재 `vsce` 4.0.0 저장소로
+이전한 뒤 `verify-pat pydemia`로 게시 권한을 확인했다. GitHub Release와
+동일한 로컬 VSIX를 `vsce publish --packagePath`로 게시했고 CLI가
+`pydemia.mark-your-scope v0.1.0` 게시 완료를 반환했다. 공개 Gallery
+조회 `vsce show pydemia.mark-your-scope`는 버전 `0.1.0`과
+`Microsoft.VisualStudio.Services.VsixSha256` 값
+`82AAA5114D489206596FDC6D48D4B9C1915904C0E06FF0AA5706AB448041235A`
+를 표시한다. 이는 GitHub Release에서 받은 VSIX와 일치한다.
+
+Marketplace URL:
+[Mark Your Scope](https://marketplace.visualstudio.com/items?itemName=pydemia.mark-your-scope).
+게시 직후 Gallery 응답의 `Public` 플래그는 있으나 `Validated` 플래그는
+아직 없고, `vsce search`와 VS Code 1.140.0의 Marketplace 설치는
+아직 확장을 찾지 못했다. 인덱싱·검증 완료 후 설치를 다시 확인한다.
