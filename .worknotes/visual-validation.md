@@ -20,6 +20,8 @@ Host, 1458×914 창(기본 화면은 1218×810). 배포된 VSIX 화면이 아니
 | 범위 선택 명령 | Python의 `if` 내부에서 상위 범위를 선택하자 `for` 블록의 시작부터 끝까지 선택 영역과 범위 경계가 나타났다. 시작·끝 이동, 보조 커서 보존, 일반 이동 후 초기화는 Host 명령 검사로 확인했다. | [선택](visual/navigation-selected.png) |
 | 선택적 들여쓰기 경고 | YAML의 혼합 탭·공백과 탭 폭에 맞지 않는 들여쓰기에 경고색 테두리가 나타났다. 이 장식은 구문 진단이 아니며 기본값에서는 꺼져 있다. | [경고](visual/indentation-warnings.png) |
 | 출시 소개 화면 | 사이드바를 닫고 글자 크기를 높인 TypeScript 샘플에서 `if` 범위 배경과 경계, 들여쓰기 선이 읽혔다. README에 이 화면을 사용한다. | [소개](visual/release-overview.png) |
+| `auto` 팔레트의 테마 전환 | 최종 팔레트 구현을 로드한 같은 TypeScript 문서에서 밝은 테마의 범위 배경·경계와 고대비 테마의 뚜렷한 경계가 각각 보였다. | [밝은 테마](visual/theme-light-auto.png), [고대비](visual/theme-high-contrast-auto.png) |
+| 최종 후보 VSIX 설치 | `0.1.0` VSIX를 격리 확장 디렉터리에 설치한 일반 VS Code에서 Python 함수 범위 배경과 시작·끝 경계가 보였다. 개발 확장 로드는 사용하지 않았다. | [설치 화면](visual/installed-vsix-0.1.0.png) |
 
 이 관찰은 각 캡처의 해당 상태만 확인한다. 접힘·줄바꿈 중 모든 커서
 위치, 혼합 탭의 모든 조합, 제삼자 확장 전체와의 공존,

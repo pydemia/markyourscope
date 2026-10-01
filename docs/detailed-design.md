@@ -1,6 +1,9 @@
 # Mark Your Scope 상세 설계안
 
-작성일: 2026-10-01. 상태: 기획 기준을 반영한 **설계 초안**. [설계 검토](../.worknotes/design-review.md)의 화면·성능 검증이 끝나야 표시값과 출시 제한을 확정한다.
+작성일: 2026-10-01. 상태: 첫 출시 MVP의 **확정 설계 기준**.
+[설계 검토](../.worknotes/design-review.md)와
+[기술·화면 검증](../.worknotes/technical-validation.md)의 결과로
+분석 제한과 기본 표시값을 확정했다. 최종 게시 결과는 별도로 기록한다.
 
 ## 결정과 범위
 

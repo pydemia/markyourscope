@@ -1,19 +1,30 @@
 {
   "name": "mark-your-scope",
   "displayName": "Mark Your Scope",
-  "description": "Explore indentation and the current syntax scope in VS Code.",
+  "description": "Highlight indentation and the current syntax scope with display modes and palettes.",
   "publisher": "pydemia",
-  "license": "Apache-2.0",
-  "version": "0.0.1",
+  "license": "SEE LICENSE IN LICENSE",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"
+  },
+  "homepage": "https://github.com/pydemia/markyourscope#readme",
+  "bugs": {
+    "url": "https://github.com/pydemia/markyourscope/issues"
   },
   "engines": {
     "vscode": "^1.140.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
+  ],
+  "keywords": [
+    "scope",
+    "indentation",
+    "code navigation",
+    "highlight",
+    "palette"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -89,7 +100,11 @@
         },
         "markYourScope.indentation.warnings": {
           "type": "string",
-          "enum": ["off", "mixed", "all"],
+          "enum": [
+            "off",
+            "mixed",
+            "all"
+          ],
           "default": "off",
           "description": "Show advisory marks for mixed tabs and spaces; all also marks indentation outside tab stops."
         },
@@ -127,12 +142,24 @@
           "default": {},
           "additionalProperties": false,
           "properties": {
-            "indentLine": { "type": "string" },
-            "indentBandEven": { "type": "string" },
-            "indentBandOdd": { "type": "string" },
-            "scopeBalanced": { "type": "string" },
-            "scopeFocus": { "type": "string" },
-            "boundary": { "type": "string" }
+            "indentLine": {
+              "type": "string"
+            },
+            "indentBandEven": {
+              "type": "string"
+            },
+            "indentBandOdd": {
+              "type": "string"
+            },
+            "scopeBalanced": {
+              "type": "string"
+            },
+            "scopeFocus": {
+              "type": "string"
+            },
+            "boundary": {
+              "type": "string"
+            }
           },
           "description": "Optional #RRGGBB or #RRGGBBAA overrides; invalid entries use palette defaults."
         },
