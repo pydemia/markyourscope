@@ -1,10 +1,40 @@
 # Mark Your Scope
 
-Mark Your Scope helps you see indentation and the syntax scope around your
-cursor in Visual Studio Code. It adds subtle guides, a scope background and
-start/end boundaries without changing your code or text colors.
+Mark Your Scope makes the code block around your cursor easier to follow in
+Visual Studio Code. It combines indentation guides with the current syntax
+scope, so you can see where a nested block begins and ends while reading or
+editing. The scope name and line range also appear in the status bar. Your
+code, syntax token colors and other extensions' settings stay untouched.
 
 ![A TypeScript if scope highlighted in VS Code](media/overview.png)
+
+## What it does
+
+- **See the active scope.** Highlight the current block with a quiet
+  background and start/end boundaries. In supported languages, choose a
+  structural block or a smaller expression such as a call or collection.
+- **Follow indentation.** Show guides as lines or alternating whitespace
+  bands. Optional advisory marks point out mixed tabs and spaces or
+  indentation that does not line up with tab stops.
+- **Move through nested code.** Focus a parent scope, jump to the current
+  scope's start or end, or select the scope. The commands work with the
+  active editor and preserve other cursors when selecting.
+- **Fit your editor.** Choose a display mode and a theme-aware palette, or
+  set individual colors. A high-contrast palette is included.
+
+### Display modes
+
+| Mode | Indentation | Current scope |
+| --- | --- | --- |
+| Balanced (default) | Subtle lines | Light background and boundaries |
+| Structure | Alternating whitespace bands | Boundaries without a scope background |
+| Focus | Minimal lines | Stronger background and boundaries |
+| Off | Hidden | Hidden |
+
+The mode sets defaults; an explicit indentation style setting takes priority.
+If you only want nearby context, set `markYourScope.focus.target` to `lines`
+and choose the number of logical lines with
+`markYourScope.focus.contextLines`.
 
 ## Supported files
 
@@ -22,11 +52,18 @@ for this release. Syntax errors may suppress the affected scope; valid scopes
 elsewhere can remain visible. When a document exceeds 20,000 lines or 2 MiB
 of UTF-8 text, syntax analysis is skipped while visible indentation remains.
 
-## Use
+## Get started
 
-After installation, open a supported file and place the cursor inside a
-function or block. Use the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
-to run **Mark Your Scope** commands:
+1. Install the extension and open a JavaScript, TypeScript, Python or JSON
+   file. YAML gets indentation guides only; other non-excluded files may
+   also show indentation.
+2. Place the cursor inside a function, conditional or nested collection.
+   The current scope boundaries appear in the editor and its name and line
+   range appear in the status bar.
+3. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and search
+   for **Mark Your Scope**.
+
+Available commands include:
 
 - **Choose Display Mode:** Balanced, Structure, Focus or Off.
 - **Choose Palette:** preview with the arrow keys; `Esc` restores the
