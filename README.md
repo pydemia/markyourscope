@@ -4,7 +4,7 @@
 프로토타입이다. [제품 기획안](docs/product-plan.md)의 첫 단계인 기술 검증용이며,
 출시 가능한 MVP로 확정되지 않았다. 승인된 기획 기준과 목표 동작은
 [상세 설계안](docs/detailed-design.md), 남은 검증 항목은
-[설계 검토](docs/design-review.md)에 정리했다.
+[설계 검토](.worknotes/design-review.md)에 정리했다.
 
 ## 현재 동작
 
@@ -20,7 +20,7 @@
 현재 기본값은 기술 실험을 위한 것이다. 팔레트 선택, 표시 모드 전체,
 범위 이동·선택 명령, 실제 테마·접힘·줄바꿈 공존 검증은 아직 구현 또는
 완료되지 않았다. 사용 범위와 확인 결과는
-[기술 검증 기록](docs/technical-validation.md)에 정리했다.
+[기술 검증 기록](.worknotes/technical-validation.md)에 정리했다.
 
 ## 개발
 

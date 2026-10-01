@@ -1,6 +1,6 @@
 # 상세 설계 검토
 
-검토일: 2026-10-01. 대상: [제품 기획안](product-plan.md), [상세 설계안](detailed-design.md), [기술 검증 기록](technical-validation.md)과 현재 프로토타입. [Document Review](https://skills.pydemia.ai/skills/document-review)의 주장·근거·미확인 항목 분리 기준으로 요구사항의 누락과 상태 불일치를 확인했다. 이 문서는 설계 검토 결과이지 실제 화면 검증 결과가 아니다.
+검토일: 2026-10-01. 대상: [제품 기획안](../docs/product-plan.md), [상세 설계안](../docs/detailed-design.md), [기술 검증 기록](technical-validation.md)과 현재 프로토타입. [Document Review](https://skills.pydemia.ai/skills/document-review)의 주장·근거·미확인 항목 분리 기준으로 요구사항의 누락과 상태 불일치를 확인했다. 이 문서는 설계 검토 결과이지 실제 화면 검증 결과가 아니다.
 
 ## 반영한 의견
 
@@ -31,4 +31,4 @@
 3. **성능:** 10,000행의 이벤트부터 `setDecorations` 반환까지 p95, 최초 분석, 긴 단일 행·깊은 중첩·오류 다발 파일을 기록해 20,000행·2MB 제한 후보를 재평가한다.
 4. **배포:** VSIX는 설치 가능하지만 publisher가 정의되지 않아 `undefined_publisher`로 설치됐고 라이선스 파일 경고가 있다. 공개 배포 전에 둘을 확정한다.
 
-설계 검토에서 위 항목을 **통과로 표시하지 않았다**. 결과에 따라 [상세 설계안](detailed-design.md)의 표시 방식과 수치를 수정한 뒤 설계를 확정한다.
+설계 검토에서 위 항목을 **통과로 표시하지 않았다**. 결과에 따라 [상세 설계안](../docs/detailed-design.md)의 표시 방식과 수치를 수정한 뒤 설계를 확정한다.

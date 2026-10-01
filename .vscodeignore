@@ -2,6 +2,7 @@
 .gitignore
 .vscode/**
 .vscode-test/**
+.worknotes/**
 node_modules/**
 src/**
 test/**
