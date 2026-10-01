@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { indentationBands, indentationGuides } from "../src/indentation";
+import {
+    indentationBands,
+    indentationGuides,
+    indentationWarning,
+} from "../src/indentation";
 
 test("guides follow visual tab stops rather than character count", () => {
     assert.deepEqual(
@@ -24,4 +28,17 @@ test("background bands end at completed visual tab stops", () => {
         { line: 5, start: 0, end: 3, level: 1 },
         { line: 5, start: 3, end: 7, level: 2 },
     ]);
+});
+
+test("optional indentation warnings distinguish mixed and unaligned", () => {
+    assert.equal(indentationWarning(" \titem", 4, "off"), undefined);
+    assert.deepEqual(indentationWarning(" \titem", 4, "mixed"), {
+        start: 0, end: 2, reason: "mixed",
+    });
+    assert.equal(indentationWarning("  item", 4, "mixed"), undefined);
+    assert.deepEqual(indentationWarning("  item", 4, "all"), {
+        start: 0, end: 2, reason: "unaligned",
+    });
+    assert.equal(indentationWarning("\titem", 4, "all"), undefined);
+    assert.equal(indentationWarning("  ", 4, "all"), undefined);
 });

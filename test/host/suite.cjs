@@ -79,6 +79,13 @@ exports.run = async function run() {
         "markYourScope.toggleScopeHighlight");
     await configuration.update(
         "palette", "lightSoft", vscode.ConfigurationTarget.Global);
+    await configuration.update(
+        "indentation.warnings", "mixed",
+        vscode.ConfigurationTarget.Global);
+    assert.equal(vscode.workspace.getConfiguration(
+        "markYourScope",
+        { uri: liveDocument.uri, languageId: liveDocument.languageId },
+    ).get("indentation.warnings"), "mixed");
     assert.equal(vscode.workspace.getConfiguration(
         "markYourScope",
         { uri: liveDocument.uri, languageId: liveDocument.languageId },
@@ -152,4 +159,7 @@ exports.run = async function run() {
         "focus.target", undefined, vscode.ConfigurationTarget.Global);
     await configuration.update(
         "palette", undefined, vscode.ConfigurationTarget.Global);
+    await configuration.update(
+        "indentation.warnings", undefined,
+        vscode.ConfigurationTarget.Global);
 };

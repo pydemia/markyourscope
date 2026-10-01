@@ -78,6 +78,13 @@ JSX/TSX, JSON with Comments, 다른 텍스트 언어에는 첫 출시 구문 범
 
 `markYourScope.enabled`, `mode`, `indentation.style`, `focus.target`, `focus.contextLines`, `palette`, `indentation.warnings`, `excludedLanguages`를 기획안의 이름과 타입으로 노출한다. 주변 행 목표는 구문 분석 결과와 분리해 위아래 `contextLines` 논리 행을 선택한다. 잘못된 사용자 색상값은 해당 값만 기본값으로 대체하고 설정 문제를 알린다. 설정 명세와 실제 `package.json`은 구현 단계에서 함께 갱신한다.
 
+`indentation.warnings`의 기본값은 `off`다. `mixed`는 선행 들여쓰기에
+탭과 공백이 함께 있는 행을 표시한다. `all`은 이에 더해 들여쓰기의
+표시 열이 `tabSize`의 배수가 아닌 행을 표시한다. 빈 행은 표시하지
+않는다. 표시는 참고용 장식과 호버 설명이며 언어 진단이나 자동 수정은
+만들지 않는다. `indentation.style=off`에서도 사용자가 경고를 켰다면
+경고 장식은 표시한다.
+
 ## 실행 제한과 검증 계획
 
 출시 초기 분석 제한은 20,000행 또는 UTF-8 2MB 초과다. 제한 초과 시 구문 분석만 건너뛰고 보이는 행의 들여쓰기 표시는 유지한다. 이 값은 일반 파일 크기 제한이며 파서의 중첩 한도를 보증하지 않는다. 파서 스택을 넘는 깊은 중첩은 분석 오류 상태로 안전하게 종료한다. 오류가 매우 많은 Python 문서에서 단일 분석이 느릴 수 있으므로 입력을 합쳐 75ms 뒤 분석한다. 커서 이동 시 문서를 다시 파싱하지 않는다.

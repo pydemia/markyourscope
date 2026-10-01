@@ -5,6 +5,7 @@ export interface DecorationSet {
     indentLine: vscode.TextEditorDecorationType;
     indentBandEven: vscode.TextEditorDecorationType;
     indentBandOdd: vscode.TextEditorDecorationType;
+    indentationWarning: vscode.TextEditorDecorationType;
     scopeBalanced: vscode.TextEditorDecorationType;
     scopeFocus: vscode.TextEditorDecorationType;
     start: vscode.TextEditorDecorationType;
@@ -36,6 +37,12 @@ export class EditorDecorations implements vscode.Disposable {
             }),
             indentBandOdd: vscode.window.createTextEditorDecorationType({
                 backgroundColor: colors.indentBandOdd,
+            }),
+            indentationWarning: vscode.window.createTextEditorDecorationType({
+                borderColor: new vscode.ThemeColor(
+                    "editorWarning.foreground"),
+                borderStyle: "solid",
+                borderWidth: "1px",
             }),
             scopeBalanced: vscode.window.createTextEditorDecorationType({
                 backgroundColor: colors.scopeBalanced,

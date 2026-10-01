@@ -87,6 +87,12 @@
           "default": "line",
           "description": "Show indentation guides, whitespace bands, or neither."
         },
+        "markYourScope.indentation.warnings": {
+          "type": "string",
+          "enum": ["off", "mixed", "all"],
+          "default": "off",
+          "description": "Show advisory marks for mixed tabs and spaces; all also marks indentation outside tab stops."
+        },
         "markYourScope.focus.target": {
           "type": "string",
           "enum": [

@@ -10,7 +10,12 @@ import {
     EditorDecorations,
     type DecorationSet,
 } from "./editor-decorations";
-import { indentationBands, indentationGuides } from "./indentation";
+import {
+    indentationBands,
+    indentationGuides,
+    indentationWarning,
+    type IndentationWarnings,
+} from "./indentation";
 import { scopeEndOffset } from "./navigation";
 import {
     paletteColors,
@@ -490,7 +495,14 @@ export function activate(context: vscode.ExtensionContext): void {
         const guides: vscode.Range[] = [];
         const evenBands: vscode.Range[] = [];
         const oddBands: vscode.Range[] = [];
-        if (display.indentationStyle !== "off") {
+        const warningsSetting = config.get<string>(
+            "indentation.warnings", "off");
+        const warningsMode: IndentationWarnings =
+            warningsSetting === "mixed" || warningsSetting === "all"
+                ? warningsSetting : "off";
+        const warnings: vscode.DecorationOptions[] = [];
+        if (display.indentationStyle !== "off" ||
+            warningsMode !== "off") {
             const seen = new Set<number>();
             for (const visible of visibleLineIntersections(
                 { startLine: 0, endLine: document.lineCount - 1 },
@@ -502,6 +514,18 @@ export function activate(context: vscode.ExtensionContext): void {
                     if (seen.has(line)) continue;
                     seen.add(line);
                     const text = document.lineAt(line).text;
+                    const warning = indentationWarning(
+                        text, tabSize, warningsMode);
+                    if (warning) {
+                        warnings.push({
+                            range: new vscode.Range(
+                                line, warning.start,
+                                line, warning.end),
+                            hoverMessage: warning.reason === "mixed"
+                                ? "Mixed tabs and spaces in indentation"
+                                : "Indentation does not align to tab size",
+                        });
+                    }
                     if (display.indentationStyle === "line") {
                         for (const guide of indentationGuides(
                             [text], line, tabSize)) {
@@ -512,7 +536,8 @@ export function activate(context: vscode.ExtensionContext): void {
                                 guide.character + 1,
                             ));
                         }
-                    } else {
+                    } else if (display.indentationStyle ===
+                        "background") {
                         for (const band of indentationBands(
                             [text], line, tabSize)) {
                             const range = new vscode.Range(
@@ -530,6 +555,7 @@ export function activate(context: vscode.ExtensionContext): void {
         editor.setDecorations(types.indentLine, guides);
         editor.setDecorations(types.indentBandEven, evenBands);
         editor.setDecorations(types.indentBandOdd, oddBands);
+        editor.setDecorations(types.indentationWarning, warnings);
 
         if (!display.showScope) {
             clearScope(editor, types);

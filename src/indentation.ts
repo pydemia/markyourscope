@@ -10,6 +10,40 @@ export interface IndentBand {
     level: number;
 }
 
+export type IndentationWarnings = "off" | "mixed" | "all";
+
+export interface IndentationWarning {
+    start: number;
+    end: number;
+    reason: "mixed" | "unaligned";
+}
+
+/** Advisory whitespace warning, independent of syntax diagnostics. */
+export function indentationWarning(
+    text: string,
+    tabSize: number,
+    mode: IndentationWarnings,
+): IndentationWarning | undefined {
+    if (mode === "off" || !Number.isInteger(tabSize) || tabSize < 1) {
+        return undefined;
+    }
+    const match = /^[ \t]+/u.exec(text);
+    if (!match || match[0].length === text.length) return undefined;
+    const leading = match[0];
+    const mixed = leading.includes(" ") && leading.includes("\t");
+    if (mixed) return { start: 0, end: leading.length, reason: "mixed" };
+    if (mode === "mixed") return undefined;
+    let column = 0;
+    for (const character of leading) {
+        column = character === "\t"
+            ? column + tabSize - column % tabSize : column + 1;
+    }
+    if (column % tabSize !== 0) {
+        return { start: 0, end: leading.length, reason: "unaligned" };
+    }
+    return undefined;
+}
+
 /** Map completed visual indentation steps to character ranges. */
 export function indentationBands(
     lines: readonly string[],

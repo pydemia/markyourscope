@@ -30,6 +30,10 @@ pydemia Coding Style, Document Review (`4874752`).
 | MVP 구현 | 상세 설계 확정 후 모드와 설정, 팔레트 미리보기·취소·저장, 범위 이동·선택, 상태·테마 변경을 구현한다. | 각 사용자 흐름이 자동 테스트와 Host 및 실제 편집기 검증을 통과하고 기획 기준과 일치한다. | `[Feature] Add display modes and settings`; `[Feature] Add palette preview and persistence`; `[Feature] Add scope navigation commands` |
 | 출시 검증 | MVP 통과 후 플랫폼·테마·확장 공존, 격리 VSIX 설치, README·지원 범위·배포 정보를 확인한다. Apache-2.0 파일과 publisher 메타데이터를 추가한다. | Marketplace와 GitHub Release 양쪽의 실제 게시 및 설치 결과를 확인하고 남은 제한을 기록한다. | `[Test] Verify packaged extension flows`; `[Doc] Record supported scope and limits`; `[Chore] Add Apache license and release metadata`; `[Release] Publish VSIX to both channels` |
 
+MVP 구현 중 설정 대조에서 `indentation.warnings`가 빠진 것을 확인했다.
+기본값 `off`와 `mixed`/`all`의 참고 표시를 구현하고
+`[Feature] Add optional indentation warnings` 커밋으로 검증한다.
+
 ## 각 작업 단위의 검증과 Git 규칙
 
 1. 관련 구현·호출자·설정·테스트를 읽고 변경 범위를 정한다.
