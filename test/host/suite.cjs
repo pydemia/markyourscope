@@ -20,4 +20,36 @@ exports.run = async function run() {
     await vscode.commands.executeCommand("markYourScope.focusParentScope");
     await vscode.commands.executeCommand("markYourScope.resetScopeFocus");
     assert.equal(editor.document.languageId, "python");
+
+    const liveDocument = await vscode.workspace.openTextDocument({
+        language: "python",
+        content: [
+            "def process(items):",
+            "    for item in items:",
+            "        if item.valid:",
+            "            save(item)",
+            "",
+        ].join("\n"),
+    });
+    const left = await vscode.window.showTextDocument(liveDocument, {
+        viewColumn: vscode.ViewColumn.One,
+    });
+    const right = await vscode.window.showTextDocument(liveDocument, {
+        viewColumn: vscode.ViewColumn.Two,
+    });
+    assert.notEqual(left, right, "split editors keep separate editor state");
+    assert.ok(vscode.window.visibleTextEditors.includes(left));
+    assert.ok(vscode.window.visibleTextEditors.includes(right));
+
+    left.selection = new vscode.Selection(3, 13, 3, 13);
+    right.selection = new vscode.Selection(2, 11, 2, 11);
+    assert.notDeepEqual(left.selection.active, right.selection.active);
+    const broken = await right.edit((edit) =>
+        edit.replace(liveDocument.lineAt(3).range, "            save("));
+    assert.ok(broken, "syntax error edit applied");
+    assert.match(liveDocument.getText(), /save\(\n/);
+    const repaired = await right.edit((edit) =>
+        edit.replace(liveDocument.lineAt(3).range, "            save(item)"));
+    assert.ok(repaired, "syntax repair edit applied");
+    assert.match(liveDocument.getText(), /save\(item\)/);
 };
