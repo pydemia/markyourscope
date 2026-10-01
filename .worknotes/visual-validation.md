@@ -15,6 +15,7 @@ Host, 1458×914 창(기본 화면은 1218×810). 배포된 VSIX 화면이 아니
 | 구문 오류와 복구 | `save(`로 미완성 입력을 만든 뒤에는 넓은 범위 배경이 보이지 않았다. `save();`로 복구한 뒤에는 `if` 범위 경계와 배경이 다시 나타났다. 각 캡처는 입력 후 안정된 화면이다. | [오류](visual/broken.png), [복구](visual/repaired.png) |
 | 별도 확장 장식 | 두 번째 개발 확장이 `save`에 초록색 외곽선을 적용했다. Mark Your Scope의 범위 배경·경계와 외곽선이 같은 화면에 남았고 텍스트를 읽을 수 있었다. Marketplace에서 설치한 제삼자 확장의 모든 조합을 대표하지는 않는다. | [두 확장](visual/companion.png) |
 | 격리 VSIX 설치 | `pydemia.mark-your-scope@0.0.1` 설치 후 개발 로드 옵션 없이 일반 VS Code 창에서 Python 범위 표시가 보였다. | [설치 화면](visual/installed-vsix.png) |
+| 표시 모드 | 같은 TypeScript 중첩 샘플에서 Balanced는 옅은 배경·경계, Structure는 경계 중심과 들여쓰기 공백 배경, Focus는 더 진한 범위 배경, Off는 확장 범위 표시 없음으로 보였다. 주변 행 목표는 논리 행 1–7을 표시했다. | [Balanced](visual/mode-balanced.png), [Structure](visual/mode-structure.png), [Focus](visual/mode-focus.png), [Off](visual/mode-off.png), [주변 행](visual/mode-lines.png) |
 
 이 관찰은 각 캡처의 해당 상태만 확인한다. 접힘·줄바꿈 중 모든 커서
 위치, 혼합 탭의 모든 조합, 제삼자 확장 전체와의 공존,

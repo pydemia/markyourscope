@@ -142,6 +142,23 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
   중간 화면은 자동 검사에서 직접 읽지 못한다. MVP 화면 검증 때
   다시 확인한다.
 
+## 2026-10-01 MVP 표시 모드 검사
+
+- `mode` 네 값, 들여쓰기 `background`, `focus.target=lines`,
+  `focus.contextLines`를 manifest와 표시 계산에 연결했다.
+  사용자가 명시한 들여쓰기 설정은 모드 기본값보다 우선하고
+  Off·전체 끄기는 모두 숨긴다. 세션 토글은 구문 장식만 바꾼다.
+- `npm run check`, `npm test` 20/20, `npm run test:host`가
+  통과했다. 최초 Host 검사에서는 업데이트 전 설정 객체로 값을
+  다시 읽어 이전 기본값을 얻었고, 새 설정 객체로 읽도록 검사를
+  고친 뒤 통과했다.
+- 다섯 가지 화면은 [화면 검증](visual-validation.md)에 캡처했다.
+  모드 Quick Pick의 실제 클릭·취소 흐름과 언어별·워크스페이스별
+  설정 위치 동작은 아직 별도 확인이 필요하다.
+- 같은 10,001행 호스트 커서 이동 200회 재측정은 p95 31.89ms,
+  최대 77.18ms였다. 모드용 장식 종류가 늘어난 뒤에도 이 한 번의
+  p95는 50ms 목표 안이지만, 최대값과 환경 변동은 남는다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),

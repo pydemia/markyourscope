@@ -28,6 +28,14 @@
       {
         "command": "markYourScope.resetScopeFocus",
         "title": "Mark Your Scope: Reset Scope Focus"
+      },
+      {
+        "command": "markYourScope.toggleScopeHighlight",
+        "title": "Mark Your Scope: Toggle Scope Highlight"
+      },
+      {
+        "command": "markYourScope.chooseDisplayMode",
+        "title": "Mark Your Scope: Choose Display Mode"
       }
     ],
     "configuration": {
@@ -38,23 +46,43 @@
           "default": true,
           "description": "Show indentation and current syntax scope."
         },
+        "markYourScope.mode": {
+          "type": "string",
+          "enum": [
+            "balanced",
+            "structure",
+            "focus",
+            "off"
+          ],
+          "default": "balanced",
+          "description": "Choose the default indentation and scope display."
+        },
         "markYourScope.indentation.style": {
           "type": "string",
           "enum": [
             "line",
+            "background",
             "off"
           ],
           "default": "line",
-          "description": "Show subtle indentation guides or hide them."
+          "description": "Show indentation guides, whitespace bands, or neither."
         },
         "markYourScope.focus.target": {
           "type": "string",
           "enum": [
             "block",
-            "expression"
+            "expression",
+            "lines"
           ],
           "default": "block",
-          "description": "Choose structural blocks or the nearest expression."
+          "description": "Choose structural blocks, expressions, or nearby logical lines."
+        },
+        "markYourScope.focus.contextLines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 3,
+          "description": "Logical lines above and below the cursor in lines mode."
         },
         "markYourScope.excludedLanguages": {
           "type": "array",

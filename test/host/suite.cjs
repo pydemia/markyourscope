@@ -11,6 +11,8 @@ exports.run = async function run() {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("markYourScope.focusParentScope"));
     assert.ok(commands.includes("markYourScope.resetScopeFocus"));
+    assert.ok(commands.includes("markYourScope.toggleScopeHighlight"));
+    assert.ok(commands.includes("markYourScope.chooseDisplayMode"));
 
     const document = await vscode.workspace.openTextDocument(
         path.resolve(__dirname, "../fixtures/sample.py"),
@@ -53,4 +55,27 @@ exports.run = async function run() {
     assert.ok(repaired, "syntax repair edit applied");
     await new Promise((resolve) => setTimeout(resolve, 120));
     assert.match(liveDocument.getText(), /save\(item\)/);
+
+    const configuration = vscode.workspace.getConfiguration(
+        "markYourScope",
+        { uri: liveDocument.uri, languageId: liveDocument.languageId },
+    );
+    await configuration.update(
+        "mode", "structure", vscode.ConfigurationTarget.Global);
+    await configuration.update(
+        "focus.target", "lines", vscode.ConfigurationTarget.Global);
+    const updatedConfiguration = vscode.workspace.getConfiguration(
+        "markYourScope",
+        { uri: liveDocument.uri, languageId: liveDocument.languageId },
+    );
+    assert.equal(updatedConfiguration.get("mode"), "structure");
+    assert.equal(updatedConfiguration.get("focus.target"), "lines");
+    await vscode.commands.executeCommand(
+        "markYourScope.toggleScopeHighlight");
+    await vscode.commands.executeCommand(
+        "markYourScope.toggleScopeHighlight");
+    await configuration.update(
+        "mode", undefined, vscode.ConfigurationTarget.Global);
+    await configuration.update(
+        "focus.target", undefined, vscode.ConfigurationTarget.Global);
 };
