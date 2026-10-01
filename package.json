@@ -4,7 +4,7 @@
   "description": "Highlight the current code scope and indentation guides in VS Code. Navigate nested blocks and scope boundaries, switch focus modes and tune palettes for JavaScript, TypeScript, Python and JSON.",
   "publisher": "pydemia",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"

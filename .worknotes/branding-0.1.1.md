@@ -54,3 +54,23 @@
   순서를 설명한다. 일반 파일의 들여쓰기와 제외 언어를 구분했다.
 - `vsce package` 미리보기의 manifest에서 새 설명과 키워드 26개를
   확인했다. `git diff --check` 통과.
+
+## 0.1.1 후보 검증
+
+- `npm version 0.1.1 --no-git-tag-version`으로 manifest와 lockfile의
+  버전을 함께 올렸다. 실행 코드와 의존성은 바뀌지 않았다.
+- `npm run check`, `npm test` 25/25, `npm run test:host` 통과.
+- 최종 후보 `mark-your-scope-0.1.1.vsix`는 16개 파일, 약 1.68MB.
+  SHA-256:
+  `E1E9D9A304C831905D6B7C5A747129C51390CE2AD11F1C35D1A9FD4EE71AFDE9`.
+  VSIX manifest의 ID는 `pydemia.mark-your-scope`, 버전은 `0.1.1`,
+  아이콘은 `media/icon.png`, 키워드는 26개다.
+- 격리된 VS Code 1.140.0 프로필에서 후보 VSIX를 설치했고
+  `pydemia.mark-your-scope@0.1.1`이 목록에 나타났다.
+- 검증 범위는 기존과 같이 Windows x64, VS Code 1.140.0이다.
+  다른 플랫폼·Remote·웹·Notebook·diff 편집기는 새로 검증하지 않았다.
+
+## 게시 결과
+
+PR 병합 후 두 채널에 동일한 VSIX를 게시하고 공개 URL·해시·설치
+결과를 이곳에 기록한다.
