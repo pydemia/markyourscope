@@ -72,5 +72,27 @@
 
 ## 게시 결과
 
-PR 병합 후 두 채널에 동일한 VSIX를 게시하고 공개 URL·해시·설치
-결과를 이곳에 기록한다.
+- [PR #3](https://github.com/pydemia/markyourscope/pull/3)을
+  `2b550a72a0d97bb034ee0fa0f8d26191bcd1a34b`로 `main`에
+  병합했다. 후보와 병합본의 제품 파일 차이는 없다.
+- [GitHub Release v0.1.1](https://github.com/pydemia/markyourscope/releases/tag/v0.1.1)을
+  병합 커밋 대상으로 공개했다. 로그인 없이 내려받은 VSIX의 SHA-256은
+  후보와 동일한
+  `E1E9D9A304C831905D6B7C5A747129C51390CE2AD11F1C35D1A9FD4EE71AFDE9`다.
+- `vsce verify-pat pydemia` 통과 후 동일 파일을 Marketplace에
+  `vsce publish --packagePath`로 업로드했다. 공개 Gallery CDN에서
+  내려받은 VSIX의 해시가 GitHub Release와 일치한다. 공개 CDN의
+  기본 아이콘은 원본 `media/icon.png`와 바이트 단위로 같고,
+  72×72 작은 아이콘도 확인했다.
+- 게시 직후 공개 Gallery 조회와 검색은 검증된 이전 버전 `0.1.0`을
+  보여 줬다. 후속 확인에서 버전 `0.1.1`의 `Validated` 플래그가
+  설정됐고, 공개 Gallery의 최신 버전·SHA-256·설명·태그 26개가
+  후보와 일치했다. 한국어 태그 `들여쓰기`와 `코드 범위`도 나타난다.
+- Marketplace 공개 페이지는 HTTP 200이고 새 설명과 `0.1.1`을
+  표시한다. `vsce search`에서 확장 ID뿐 아니라
+  `scope navigation`, `indentation guides`, `들여쓰기`, `코드 범위`
+  검색어로 확장이 결과에 나타났다. 검색 순위는 시점에 따라 달라질
+  수 있으므로 순위 보장은 하지 않는다.
+- 새 격리 VS Code 1.140.0 프로필에서 Marketplace 확장 ID로 설치했고
+  `pydemia.mark-your-scope@0.1.1`을 확인했다. 두 채널의 공개 VSIX와
+  Marketplace 기본 아이콘, 검색 메타데이터를 모두 확인했다.
