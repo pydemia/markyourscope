@@ -1,10 +1,14 @@
 import * as vscode from "vscode";
+import { AnalysisScheduler } from "./analysis-scheduler";
 import { indentationGuides } from "./indentation";
 import { analyzeScopes, scopesAt, type ScopeAnalysis } from "./scope";
 import { visibleLineIntersections } from "./visible";
 
 const MAX_LINES = 20_000;
 const MAX_BYTES = 2 * 1024 * 1024;
+const SUPPORTED_LANGUAGES = new Set([
+    "javascript", "typescript", "python", "json",
+]);
 
 interface CachedAnalysis {
     version: number;
@@ -45,6 +49,12 @@ export function activate(context: vscode.ExtensionContext): void {
     const output = vscode.window.createOutputChannel("Mark Your Scope");
     const analysisCache = new Map<string, CachedAnalysis>();
     const editorFocus = new Map<vscode.TextEditor, EditorFocus>();
+    const analysisScheduler = new AnalysisScheduler(75, (key, version) => {
+        for (const editor of vscode.window.visibleTextEditors) {
+            if (editor.document.uri.toString() === key &&
+                editor.document.version === version) render(editor);
+        }
+    });
     context.subscriptions.push(
         indentDecoration,
         scopeDecoration,
@@ -52,13 +62,18 @@ export function activate(context: vscode.ExtensionContext): void {
         endDecoration,
         status,
         output,
+        analysisScheduler,
     );
 
-    function clear(editor: vscode.TextEditor): void {
-        editor.setDecorations(indentDecoration, []);
+    function clearScope(editor: vscode.TextEditor): void {
         editor.setDecorations(scopeDecoration, []);
         editor.setDecorations(startDecoration, []);
         editor.setDecorations(endDecoration, []);
+    }
+
+    function clear(editor: vscode.TextEditor): void {
+        editor.setDecorations(indentDecoration, []);
+        clearScope(editor);
         if (editor === vscode.window.activeTextEditor) status.hide();
     }
 
@@ -132,6 +147,16 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         }
         editor.setDecorations(indentDecoration, guides);
+
+        if (analysisScheduler.isPending(
+            document.uri.toString(), document.version)) {
+            clearScope(editor);
+            if (editor === vscode.window.activeTextEditor) {
+                status.text = "Scope: 분석 중";
+                status.show();
+            }
+            return;
+        }
 
         const analysis = analyze(document);
         const anchor = editor.selection.active;
@@ -244,16 +269,27 @@ export function activate(context: vscode.ExtensionContext): void {
             else status.hide();
         }),
         vscode.workspace.onDidChangeTextDocument((event) => {
-            analysisCache.delete(event.document.uri.toString());
+            const key = event.document.uri.toString();
+            analysisCache.delete(key);
+            if (SUPPORTED_LANGUAGES.has(event.document.languageId)) {
+                analysisScheduler.schedule(key, event.document.version);
+            } else {
+                analysisScheduler.cancel(key);
+            }
+            for (const editor of editorFocus.keys()) {
+                if (editor.document === event.document) editorFocus.delete(editor);
+            }
             for (const editor of vscode.window.visibleTextEditors) {
                 if (editor.document === event.document) {
-                    editorFocus.delete(editor);
                     render(editor);
                 }
             }
         }),
-        vscode.workspace.onDidCloseTextDocument((document) =>
-            analysisCache.delete(document.uri.toString())),
+        vscode.workspace.onDidCloseTextDocument((document) => {
+            const key = document.uri.toString();
+            analysisScheduler.cancel(key);
+            analysisCache.delete(key);
+        }),
         vscode.workspace.onDidChangeConfiguration((event) => {
             if (event.affectsConfiguration("markYourScope")) renderAll();
         }),

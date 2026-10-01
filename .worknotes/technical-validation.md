@@ -127,6 +127,21 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
   `.gitattributes`에 해당 텍스트만 공백 검사 예외를 명시했고,
   `git diff HEAD^ HEAD --check`를 다시 실행해 통과했다.
 
+## 2026-10-01 예약 분석 구현 검사
+
+- 내용 변경 시 구문 장식을 즉시 지우고 최신 버전의 분석만 75ms
+  뒤에 예약한다. 대기 중에는 `Scope: 분석 중`을 표시하고
+  들여쓰기 표시를 유지한다. 문서 닫힘과 새 버전은 예약을 취소한다.
+- `npm run check`, `npm test` 17/17, `npm run test:host`가
+  통과했다. Host 검사는 두 편집기의 오류·복구 입력 후 120ms를
+  기다려 예약 실행이 끝나는 경로를 포함한다.
+- 변경 후 10,001행 TypeScript 호스트 커서 이동 200회 측정은
+  p95 17.84ms, 최대 59ms였다. 측정 구간은 앞의 호스트
+  측정과 같고 픽셀 반영 시각은 포함하지 않는다.
+- 예약 중 상태 표시줄의 실제 텍스트와 빠른 연속 입력의 모든
+  중간 화면은 자동 검사에서 직접 읽지 못한다. MVP 화면 검증 때
+  다시 확인한다.
+
 ## 작업 지침
 
 [skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),

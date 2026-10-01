@@ -51,5 +51,6 @@ exports.run = async function run() {
     const repaired = await right.edit((edit) =>
         edit.replace(liveDocument.lineAt(3).range, "            save(item)"));
     assert.ok(repaired, "syntax repair edit applied");
+    await new Promise((resolve) => setTimeout(resolve, 120));
     assert.match(liveDocument.getText(), /save\(item\)/);
 };
