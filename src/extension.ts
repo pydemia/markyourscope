@@ -11,13 +11,14 @@ import {
     type DecorationSet,
 } from "./editor-decorations";
 import { indentationBands, indentationGuides } from "./indentation";
+import { scopeEndOffset } from "./navigation";
 import {
     paletteColors,
     paletteId,
     type PaletteId,
     type ThemeKind,
 } from "./palette";
-import { analyzeScopes, scopesAt, type ScopeAnalysis } from "./scope";
+import { analyzeScopes, scopesAt, type Scope, type ScopeAnalysis } from "./scope";
 import { visibleLineIntersections } from "./visible";
 
 const MAX_LINES = 20_000;
@@ -33,7 +34,10 @@ interface CachedAnalysis {
 
 interface EditorFocus {
     anchor: vscode.Position;
+    origin: vscode.Position;
     parentIndex: number;
+    pinnedScope?: Scope;
+    expectedSelection?: vscode.Selection;
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -259,6 +263,70 @@ export function activate(context: vscode.ExtensionContext): void {
             uri: editor.document.uri,
             languageId: editor.document.languageId,
         });
+    }
+
+    function focusedScope(
+        editor: vscode.TextEditor,
+        analysis: ScopeAnalysis | null,
+        target: "block" | "expression",
+    ): Scope | undefined {
+        const focus = editorFocus.get(editor);
+        const current = editor.selection.active;
+        const retained = focus?.anchor.isEqual(current) ? focus : undefined;
+        if (retained?.pinnedScope) return retained.pinnedScope;
+        const origin = retained?.origin ?? current;
+        const candidates = analysis
+            ? scopesAt(analysis.scopes, editor.document.offsetAt(origin), target)
+            : [];
+        return candidates[Math.min(
+            retained?.parentIndex ?? 0, candidates.length - 1)];
+    }
+
+    function navigableScope(editor: vscode.TextEditor): Scope | undefined {
+        const config = editorConfiguration(editor);
+        if (!config.get<boolean>("enabled", true) ||
+            config.get<string[]>("excludedLanguages", []).includes(
+                editor.document.languageId) ||
+            config.get<string>("mode", "balanced") === "off" ||
+            !scopeToggleEnabled ||
+            config.get<string>("focus.target", "block") === "lines" ||
+            analysisScheduler.isPending(
+                editor.document.uri.toString(), editor.document.version)) {
+            return undefined;
+        }
+        const target = focusTarget(config.get<string>(
+            "focus.target", "block"));
+        return focusedScope(editor, analyze(editor.document),
+            target === "expression" ? "expression" : "block");
+    }
+
+    function navigateScope(action: "start" | "end" | "select"): void {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+        const scope = navigableScope(editor);
+        if (!scope) return;
+        const focus = editorFocus.get(editor);
+        const current = editor.selection.active;
+        const retained = focus?.anchor.isEqual(current) ? focus : undefined;
+        const start = editor.document.positionAt(scope.start);
+        const end = editor.document.positionAt(scope.end);
+        const destination = action === "start" ? start :
+            editor.document.positionAt(scopeEndOffset(
+                editor.document.getText(), scope));
+        const selection = action === "select"
+            ? new vscode.Selection(start, end)
+            : new vscode.Selection(destination, destination);
+        editorFocus.set(editor, {
+            anchor: selection.active,
+            origin: retained?.origin ?? current,
+            parentIndex: retained?.parentIndex ?? 0,
+            pinnedScope: scope,
+            expectedSelection: selection,
+        });
+        editor.selections = [selection, ...editor.selections.slice(1)];
+        editor.revealRange(selection,
+            vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+        render(editor);
     }
 
     type PaletteLocation = vscode.QuickPickItem & {
@@ -498,15 +566,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const analysis = analyze(document);
         const focus = editorFocus.get(editor);
-        const parentIndex = focus?.anchor.isEqual(anchor)
-            ? focus.parentIndex : 0;
-        editorFocus.set(editor, { anchor, parentIndex });
-
-        const candidates = analysis
-            ? scopesAt(analysis.scopes, document.offsetAt(anchor),
-                display.target)
-            : [];
-        const scope = candidates[Math.min(parentIndex, candidates.length - 1)];
+        const retained = focus?.anchor.isEqual(anchor) ? focus : undefined;
+        editorFocus.set(editor, retained ?? {
+            anchor, origin: anchor, parentIndex: 0,
+        });
+        const scope = focusedScope(editor, analysis, display.target);
         if (!scope) {
             clearScope(editor, types);
             if (editor === vscode.window.activeTextEditor) {
@@ -542,6 +606,15 @@ export function activate(context: vscode.ExtensionContext): void {
             "markYourScope.choosePalette", choosePalette),
         vscode.commands.registerCommand(
             "markYourScope.resetPalette", resetPalette),
+        vscode.commands.registerCommand(
+            "markYourScope.goToScopeStart",
+            () => navigateScope("start")),
+        vscode.commands.registerCommand(
+            "markYourScope.goToScopeEnd",
+            () => navigateScope("end")),
+        vscode.commands.registerCommand(
+            "markYourScope.selectScope",
+            () => navigateScope("select")),
         vscode.commands.registerCommand(
             "markYourScope.toggleScopeHighlight",
             () => {
@@ -591,9 +664,12 @@ export function activate(context: vscode.ExtensionContext): void {
                 const editor = vscode.window.activeTextEditor;
                 if (!editor) return;
                 const focus = editorFocus.get(editor);
+                const retained = focus?.anchor.isEqual(
+                    editor.selection.active) ? focus : undefined;
                 editorFocus.set(editor, {
                     anchor: editor.selection.active,
-                    parentIndex: (focus?.parentIndex ?? 0) + 1,
+                    origin: retained?.origin ?? editor.selection.active,
+                    parentIndex: (retained?.parentIndex ?? 0) + 1,
                 });
                 render(editor);
             },
@@ -609,8 +685,13 @@ export function activate(context: vscode.ExtensionContext): void {
         ),
         vscode.window.onDidChangeTextEditorSelection((event) => {
             const focus = editorFocus.get(event.textEditor);
-            if (focus && !focus.anchor.isEqual(event.selections[0].active)) {
-                editorFocus.delete(event.textEditor);
+            if (focus) {
+                if (focus.expectedSelection?.isEqual(event.selections[0])) {
+                    focus.expectedSelection = undefined;
+                } else if (!focus.anchor.isEqual(
+                    event.selections[0].active)) {
+                    editorFocus.delete(event.textEditor);
+                }
             }
             render(event.textEditor);
         }),
@@ -661,6 +742,9 @@ export function activate(context: vscode.ExtensionContext): void {
             analysisCache.delete(key);
         }),
         vscode.workspace.onDidChangeConfiguration((event) => {
+            if (event.affectsConfiguration("markYourScope.focus.target")) {
+                editorFocus.clear();
+            }
             if (event.affectsConfiguration("markYourScope")) renderAll();
         }),
     );

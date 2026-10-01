@@ -17,6 +17,7 @@ Host, 1458×914 창(기본 화면은 1218×810). 배포된 VSIX 화면이 아니
 | 격리 VSIX 설치 | `pydemia.mark-your-scope@0.0.1` 설치 후 개발 로드 옵션 없이 일반 VS Code 창에서 Python 범위 표시가 보였다. | [설치 화면](visual/installed-vsix.png) |
 | 표시 모드 | 같은 TypeScript 중첩 샘플에서 Balanced는 옅은 배경·경계, Structure는 경계 중심과 들여쓰기 공백 배경, Focus는 더 진한 범위 배경, Off는 확장 범위 표시 없음으로 보였다. 주변 행 목표는 논리 행 1–7을 표시했다. | [Balanced](visual/mode-balanced.png), [Structure](visual/mode-structure.png), [Focus](visual/mode-focus.png), [Off](visual/mode-off.png), [주변 행](visual/mode-lines.png) |
 | 팔레트 미리보기 | Dark Soft 설정에서 Quick Pick을 열어 Light Soft로 이동했을 때 선택 항목과 편집기 장식이 표시됐다. 취소 후 기존 설정 유지와 User 위치 저장 후 새 설정 적용은 Host 명령 검사로 확인했다. | [미리보기](visual/palette-preview.png) |
+| 범위 선택 명령 | Python의 `if` 내부에서 상위 범위를 선택하자 `for` 블록의 시작부터 끝까지 선택 영역과 범위 경계가 나타났다. 시작·끝 이동, 보조 커서 보존, 일반 이동 후 초기화는 Host 명령 검사로 확인했다. | [선택](visual/navigation-selected.png) |
 
 이 관찰은 각 캡처의 해당 상태만 확인한다. 접힘·줄바꿈 중 모든 커서
 위치, 혼합 탭의 모든 조합, 제삼자 확장 전체와의 공존,

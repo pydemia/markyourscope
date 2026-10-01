@@ -15,6 +15,9 @@ exports.run = async function run() {
     assert.ok(commands.includes("markYourScope.chooseDisplayMode"));
     assert.ok(commands.includes("markYourScope.choosePalette"));
     assert.ok(commands.includes("markYourScope.resetPalette"));
+    assert.ok(commands.includes("markYourScope.goToScopeStart"));
+    assert.ok(commands.includes("markYourScope.goToScopeEnd"));
+    assert.ok(commands.includes("markYourScope.selectScope"));
 
     const document = await vscode.workspace.openTextDocument(
         path.resolve(__dirname, "../fixtures/sample.py"),
@@ -110,6 +113,39 @@ exports.run = async function run() {
         "palette save persists the selected preset");
     await vscode.commands.executeCommand(
         "markYourScope.toggleScopeHighlight");
+    await configuration.update(
+        "focus.target", "block", vscode.ConfigurationTarget.Global);
+    await vscode.window.showTextDocument(liveDocument, {
+        viewColumn: vscode.ViewColumn.Two,
+    });
+    const secondary = new vscode.Selection(0, 0, 0, 0);
+    right.selections = [
+        new vscode.Selection(3, 16, 3, 16), secondary,
+    ];
+    await pause();
+    await vscode.commands.executeCommand(
+        "markYourScope.focusParentScope");
+    await vscode.commands.executeCommand(
+        "markYourScope.goToScopeStart");
+    assert.equal(right.selection.active.line, 1,
+        "parent scope start is the for statement");
+    assert.equal(right.selection.active.character, 4);
+    assert.ok(right.selections[1].isEqual(secondary));
+    await vscode.commands.executeCommand(
+        "markYourScope.goToScopeEnd");
+    assert.equal(right.selection.active.line, 3,
+        "navigation retains the selected parent scope");
+    await vscode.commands.executeCommand(
+        "markYourScope.selectScope");
+    assert.equal(right.selection.start.line, 1);
+    assert.ok(right.selections[1].isEqual(secondary),
+        "secondary cursors remain unchanged");
+    right.selection = new vscode.Selection(2, 11, 2, 11);
+    await pause();
+    await vscode.commands.executeCommand(
+        "markYourScope.goToScopeStart");
+    assert.equal(right.selection.active.line, 2,
+        "ordinary movement resets parent focus");
     await configuration.update(
         "mode", undefined, vscode.ConfigurationTarget.Global);
     await configuration.update(
