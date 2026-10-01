@@ -19,6 +19,11 @@
   "categories": [
     "Visualization"
   ],
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#eff3f4",
+    "theme": "light"
+  },
   "keywords": [
     "scope",
     "indentation",
