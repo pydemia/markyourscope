@@ -8,7 +8,8 @@ async function main() {
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: root,
-        extensionTestsPath: path.join(__dirname, "suite.cjs"),
+        extensionTestsPath: path.join(
+            __dirname, process.argv[2] || "suite.cjs"),
         launchArgs: [
             path.join(root, "test/fixtures"),
             "--disable-extensions",

@@ -1,18 +1,30 @@
 {
   "name": "mark-your-scope",
   "displayName": "Mark Your Scope",
-  "description": "Explore indentation and the current syntax scope in VS Code.",
-  "version": "0.0.1",
-  "private": true,
+  "description": "Highlight indentation and the current syntax scope with display modes and palettes.",
+  "publisher": "pydemia",
+  "license": "SEE LICENSE IN LICENSE",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"
   },
+  "homepage": "https://github.com/pydemia/markyourscope#readme",
+  "bugs": {
+    "url": "https://github.com/pydemia/markyourscope/issues"
+  },
   "engines": {
-    "vscode": "^1.138.0"
+    "vscode": "^1.140.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
+  ],
+  "keywords": [
+    "scope",
+    "indentation",
+    "code navigation",
+    "highlight",
+    "palette"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -27,6 +39,34 @@
       {
         "command": "markYourScope.resetScopeFocus",
         "title": "Mark Your Scope: Reset Scope Focus"
+      },
+      {
+        "command": "markYourScope.toggleScopeHighlight",
+        "title": "Mark Your Scope: Toggle Scope Highlight"
+      },
+      {
+        "command": "markYourScope.chooseDisplayMode",
+        "title": "Mark Your Scope: Choose Display Mode"
+      },
+      {
+        "command": "markYourScope.choosePalette",
+        "title": "Mark Your Scope: Choose Palette"
+      },
+      {
+        "command": "markYourScope.resetPalette",
+        "title": "Mark Your Scope: Reset Palette"
+      },
+      {
+        "command": "markYourScope.goToScopeStart",
+        "title": "Mark Your Scope: Go to Scope Start"
+      },
+      {
+        "command": "markYourScope.goToScopeEnd",
+        "title": "Mark Your Scope: Go to Scope End"
+      },
+      {
+        "command": "markYourScope.selectScope",
+        "title": "Mark Your Scope: Select Scope"
       }
     ],
     "configuration": {
@@ -37,23 +77,91 @@
           "default": true,
           "description": "Show indentation and current syntax scope."
         },
+        "markYourScope.mode": {
+          "type": "string",
+          "enum": [
+            "balanced",
+            "structure",
+            "focus",
+            "off"
+          ],
+          "default": "balanced",
+          "description": "Choose the default indentation and scope display."
+        },
         "markYourScope.indentation.style": {
           "type": "string",
           "enum": [
             "line",
+            "background",
             "off"
           ],
           "default": "line",
-          "description": "Show subtle indentation guides or hide them."
+          "description": "Show indentation guides, whitespace bands, or neither."
+        },
+        "markYourScope.indentation.warnings": {
+          "type": "string",
+          "enum": [
+            "off",
+            "mixed",
+            "all"
+          ],
+          "default": "off",
+          "description": "Show advisory marks for mixed tabs and spaces; all also marks indentation outside tab stops."
         },
         "markYourScope.focus.target": {
           "type": "string",
           "enum": [
             "block",
-            "expression"
+            "expression",
+            "lines"
           ],
           "default": "block",
-          "description": "Choose structural blocks or the nearest expression."
+          "description": "Choose structural blocks, expressions, or nearby logical lines."
+        },
+        "markYourScope.focus.contextLines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 3,
+          "description": "Logical lines above and below the cursor in lines mode."
+        },
+        "markYourScope.palette": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "darkSoft",
+            "lightSoft",
+            "highContrast",
+            "monochrome"
+          ],
+          "default": "auto",
+          "description": "Choose an editor decoration color palette."
+        },
+        "markYourScope.palette.customColors": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "properties": {
+            "indentLine": {
+              "type": "string"
+            },
+            "indentBandEven": {
+              "type": "string"
+            },
+            "indentBandOdd": {
+              "type": "string"
+            },
+            "scopeBalanced": {
+              "type": "string"
+            },
+            "scopeFocus": {
+              "type": "string"
+            },
+            "boundary": {
+              "type": "string"
+            }
+          },
+          "description": "Optional #RRGGBB or #RRGGBBAA overrides; invalid entries use palette defaults."
         },
         "markYourScope.excludedLanguages": {
           "type": "array",
@@ -74,7 +182,10 @@
     "check": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "test:host": "npm run build && node test/host/run.cjs",
-    "benchmark": "tsx scripts/benchmark.ts"
+    "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:host": "npm run build && node test/host/run.cjs benchmark.cjs",
+    "stress": "tsx scripts/stress.ts",
+    "package:vsix": "npm run build && vsce package --out .vscode-test/mark-your-scope-preview.vsix"
   },
   "dependencies": {
     "@lezer/python": "^1.1.19",
@@ -84,6 +195,7 @@
     "@types/node": "^24.0.0",
     "@types/vscode": "^1.138.0",
     "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15"
   }
