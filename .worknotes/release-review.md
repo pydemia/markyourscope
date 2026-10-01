@@ -57,3 +57,54 @@ VSIX에 필요 없는 설계 문서 포함을 각각 구현·문서·패키지 �
 코드·패키지 후보는 공개 배포를 위한 준비가 됐다. 게시 완료 판정은
 두 채널의 실제 URL, 같은 VSIX 해시와 설치 결과를 확인한 뒤
 내린다.
+
+## 2026-10-01 GitHub 초안 확인
+
+PR [#1](https://github.com/pydemia/markyourscope/pull/1)을
+`65f56d95386b3863021b95f30d33191960c6ca08`로 병합했다.
+`v0.1.0` GitHub Release **초안**에 최종 후보 VSIX를 첨부했다.
+초안의 대상은 병합 커밋이며, 첨부 파일을 GitHub에서 다시
+내려받아 계산한 SHA-256은 위의 로컬 값과 일치했다.
+초안 URL은 공개 출시 URL이 아니므로 공개 게시가 끝난 후
+URL과 설치 결과를 다시 기록한다.
+
+## 2026-10-01 GitHub 공개 게시 확인
+
+GitHub Release
+[v0.1.0](https://github.com/pydemia/markyourscope/releases/tag/v0.1.0)을
+공개했다. 태그는 병합 커밋 `65f56d9`를 가리킨다. 로그인 없는
+공개 URL에서
+[`mark-your-scope-0.1.0.vsix`](https://github.com/pydemia/markyourscope/releases/download/v0.1.0/mark-your-scope-0.1.0.vsix)를
+다운로드해 SHA-256이
+`82AAA5114D489206596FDC6D48D4B9C1915904C0E06FF0AA5706AB448041235A`
+임을 확인했다. 다운로드한 파일을 또 다른 격리 디렉터리에 설치했고
+`pydemia.mark-your-scope@0.1.0`이 목록에 나타났다.
+Marketplace는 아직 게시되지 않아 전체 배포 완료로 판정하지 않는다.
+
+## 2026-10-01 Marketplace 게시 확인
+
+이전 `vsce` 형식의 Windows 자격 증명을 현재 `vsce` 4.0.0 저장소로
+이전한 뒤 `verify-pat pydemia`로 게시 권한을 확인했다. GitHub Release와
+동일한 로컬 VSIX를 `vsce publish --packagePath`로 게시했고 CLI가
+`pydemia.mark-your-scope v0.1.0` 게시 완료를 반환했다. 공개 Gallery
+조회 `vsce show pydemia.mark-your-scope`는 버전 `0.1.0`과
+`Microsoft.VisualStudio.Services.VsixSha256` 값
+`82AAA5114D489206596FDC6D48D4B9C1915904C0E06FF0AA5706AB448041235A`
+를 표시한다. 이는 GitHub Release에서 받은 VSIX와 일치한다.
+공개 Gallery가 제공한 CDN URL에서도 로그인 없이 VSIX를 내려받아
+크기 1,751,171바이트와 동일한 SHA-256을 확인했다.
+
+Marketplace URL:
+[Mark Your Scope](https://marketplace.visualstudio.com/items?itemName=pydemia.mark-your-scope).
+게시 직후 Gallery 응답의 `Public` 플래그는 있으나 `Validated` 플래그는
+아직 없고, `vsce search`와 VS Code 1.140.0의 Marketplace 설치는
+아직 확장을 찾지 못했다. 후속 확인에서 Gallery 확장 플래그는
+`Public | Validated` (`260`), 버전 플래그는 `Validated` (`1`)로
+변경됐다. Marketplace 공개 페이지는 HTTP 200과
+`Mark Your Scope - Visual Studio Marketplace` 제목을 반환했다.
+`vsce search`도 확장 ID를 표시했고, 격리된 VS Code 1.140.0
+프로필에서 Marketplace 확장 ID로 설치한 뒤
+`pydemia.mark-your-scope@0.1.0`을 목록에서 확인했다.
+
+이로써 GitHub Release와 VS Code Marketplace의 공개 게시,
+동일한 VSIX 바이트, Marketplace 검색과 설치를 모두 확인했다.
