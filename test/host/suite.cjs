@@ -118,6 +118,40 @@ exports.run = async function run() {
     await savedPalette;
     assert.equal(currentPalette(), "highContrast",
         "palette save persists the selected preset");
+    const workspacePalette = vscode.commands.executeCommand(
+        "markYourScope.choosePalette");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.quickOpenSelectNext");
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.quickOpenSelectNext");
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await workspacePalette;
+    assert.equal(currentPalette(), "monochrome",
+        "workspace palette overrides user palette");
+
+    const resetWorkspace = vscode.commands.executeCommand(
+        "markYourScope.resetPalette");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.quickOpenSelectNext");
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await resetWorkspace;
+    assert.equal(currentPalette(), "highContrast",
+        "resetting workspace palette preserves the user setting");
+    const resetUser = vscode.commands.executeCommand(
+        "markYourScope.resetPalette");
+    await pause();
+    await vscode.commands.executeCommand(
+        "workbench.action.acceptSelectedQuickOpenItem");
+    await resetUser;
+    assert.equal(currentPalette(), "auto",
+        "resetting user palette returns to the default");
     await vscode.commands.executeCommand(
         "markYourScope.toggleScopeHighlight");
     await configuration.update(

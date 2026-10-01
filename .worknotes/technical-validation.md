@@ -159,12 +159,32 @@ Extension Development Host의 통합 테스트를 설명한다. 파서 선택에
   최대 77.18ms였다. 모드용 장식 종류가 늘어난 뒤에도 이 한 번의
   p95는 50ms 목표 안이지만, 최대값과 환경 변동은 남는다.
 
+## 2026-10-01 MVP 기능 재검증
+
+- 팔레트 단위 테스트는 테마별 `auto`, 잘못된 사용자 색상 한 항목의
+  개별 대체를 확인했다. Host Quick Pick 검사는 미리보기 취소,
+  User 저장, Workspace 저장의 우선순위, Workspace만 초기화,
+  User 초기화를 실제 명령으로 실행해 통과했다.
+- 이동 명령 Host 검사는 Python 내부에서 상위 `for`를 고른 뒤
+  시작·끝 이동, 범위 선택, 보조 커서 보존, 일반 이동 후 기본 범위
+  복귀를 확인했다. 끝 이동의 후행 공백과 Unicode 문자 경계도
+  단위 테스트로 확인했다.
+- `indentation.warnings=all` 화면에서 YAML의 혼합 탭·공백과
+  정렬되지 않은 선행 공백에 경고색 테두리가 나타났다. 기본
+  `off`, `mixed`, `all` 판단은 단위 테스트 25개에 포함됐다.
+- 2026-10-01 최종 기능 코드의 `npm run check`, `npm test` 25/25,
+  `npm run test:host`가 통과했다. 10,001행 Host 커서 이동
+  200회 재측정은 p95 29.43ms, 최대 67.74ms였다. 이는 이벤트에서
+  다음 이벤트 루프 회전까지의 측정이며 픽셀 반영 시각이 아니다.
+- [화면 기록](visual-validation.md)은 개발 확장의 관찰이다.
+  최종 버전 VSIX 설치와 Marketplace·GitHub 게시 검증은 별도다.
+
 ## 작업 지침
 
-[skills.pydemia.ai의 Software Engineering](https://skills.pydemia.ai/skills/software-engineering),
-[pydemia Coding Style](https://skills.pydemia.ai/skills/pydemia-coding-style),
-[Product UI/UX Design](https://skills.pydemia.ai/skills/product-ui-ux-design)을
-적용했다. 사이트의 `/api/health`에서 확인한 원본 revision은
-`2d0786579661`이다. UI 스킬의 비색상 상태 전달 원칙에 따라 상태 표시줄에
-범위 종류와 행을 남겼고, 개발 스킬의 검증 구분에 따라 호스트 활성화와
-시각적 검증을 별도로 기록했다.
+[GitHub pydemia/agent-skills](https://github.com/pydemia/agent-skills)의
+Software Engineering, pydemia Coding Style, Document Review를
+원본 `4874752` 기준으로 확인했다. 초기 검증 당시 참고한
+skills.pydemia.ai `/api/health`는 `2d0786579661`을 반환했으나,
+GitHub 저장소가 실제 스킬 원본임을 사용자에게 확인받았다.
+비색상 상태 전달을 위해 상태 표시줄에 범위 종류와 행을 남겼고,
+호스트 활성화·실제 화면·패키지 설치의 결과를 구별해 기록했다.
