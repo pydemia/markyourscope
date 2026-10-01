@@ -91,9 +91,20 @@ Marketplace는 아직 게시되지 않아 전체 배포 완료로 판정하지 �
 `Microsoft.VisualStudio.Services.VsixSha256` 값
 `82AAA5114D489206596FDC6D48D4B9C1915904C0E06FF0AA5706AB448041235A`
 를 표시한다. 이는 GitHub Release에서 받은 VSIX와 일치한다.
+공개 Gallery가 제공한 CDN URL에서도 로그인 없이 VSIX를 내려받아
+크기 1,751,171바이트와 동일한 SHA-256을 확인했다.
 
 Marketplace URL:
 [Mark Your Scope](https://marketplace.visualstudio.com/items?itemName=pydemia.mark-your-scope).
 게시 직후 Gallery 응답의 `Public` 플래그는 있으나 `Validated` 플래그는
 아직 없고, `vsce search`와 VS Code 1.140.0의 Marketplace 설치는
-아직 확장을 찾지 못했다. 인덱싱·검증 완료 후 설치를 다시 확인한다.
+아직 확장을 찾지 못했다. 후속 확인에서 Gallery 확장 플래그는
+`Public | Validated` (`260`), 버전 플래그는 `Validated` (`1`)로
+변경됐다. Marketplace 공개 페이지는 HTTP 200과
+`Mark Your Scope - Visual Studio Marketplace` 제목을 반환했다.
+`vsce search`도 확장 ID를 표시했고, 격리된 VS Code 1.140.0
+프로필에서 Marketplace 확장 ID로 설치한 뒤
+`pydemia.mark-your-scope@0.1.0`을 목록에서 확인했다.
+
+이로써 GitHub Release와 VS Code Marketplace의 공개 게시,
+동일한 VSIX 바이트, Marketplace 검색과 설치를 모두 확인했다.
