@@ -118,3 +118,12 @@ Marketplace URL:
 - `vsce verify-pat pydemia` 통과 후 동일한 VSIX를 `vsce publish --packagePath`로 게시했다. 게시자 Gallery에서 버전 `0.2.0`과 같은 SHA-256을 확인했고, 검증 완료 플래그가 설정됐다.
 - 공개 Gallery의 최신 버전은 `0.2.0`이며 엔진 `^1.139.1`과 같은 SHA-256을 표시한다. [Marketplace 페이지](https://marketplace.visualstudio.com/items?itemName=pydemia.mark-your-scope)는 HTTP 200과 `0.2.0`을 반환한다. 공개 CDN의 VSIX를 다시 내려받아 같은 SHA-256을 확인했다.
 - `vsce search "Mark Your Scope"`에 ID가 나타나고, 새 격리 VS Code 1.139.1 프로필에서 Marketplace ID로 설치한 결과 `pydemia.mark-your-scope@0.2.0`을 확인했다.
+
+## 2026-10-30 Marketplace 0.3.0 게시 확인
+
+- 상위 범위 색, 현재 범위 강조, 바깥 감광, 범위별 레일을 `main` 커밋 `f863f53f0ab10deb4fd4eaafca758e2695cf737e`에 반영하고 원격 SHA를 대조했다.
+- `npm run check`, `npm test` 33/33, VS Code 1.140.0 Extension Host를 통과했다. 10,001행·200회 선택 호스트 벤치마크 p95는 16.31ms다.
+- VS Code 1.139.1 설치본의 호스트 재실행은 업데이트 잠금으로 시작되지 않았다. 대신 격리 프로필에 후보 VSIX와 공개 Marketplace ID를 각각 설치해 두 경우 모두 `pydemia.mark-your-scope@0.3.0`을 확인했다.
+- 게시한 `mark-your-scope-0.3.0.vsix`의 SHA-256은 `56611D10A4ADC490F0EBE1D3E249A3ECA7E9D4C6819BFD0F417CBEA6215E865D`다. `vsce verify-pat pydemia`와 `vsce publish --packagePath`가 성공했다.
+- 공개 Gallery의 0.3.0 엔진은 `^1.139.1`, VSIX SHA-256은 게시 파일과 같다. 공개 CDN에서 받은 1,765,544바이트 VSIX도 같은 해시다. Marketplace 페이지는 HTTP 200과 0.3.0을 반환했다.
+- 실제 편집기 화면의 선택·검색·진단 표시와 겹치는 모습은 이번 게시에서 별도 스크린샷 검증을 하지 못했다. 레일은 들여쓰기 공백이 있는 행에만 그린다.
