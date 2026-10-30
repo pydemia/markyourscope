@@ -167,6 +167,10 @@ exports.run = async function run() {
     await vscode.commands.executeCommand(
         "markYourScope.focusParentScope");
     await vscode.commands.executeCommand(
+        "markYourScope.focusParentScope");
+    await vscode.commands.executeCommand(
+        "markYourScope.focusParentScope");
+    await vscode.commands.executeCommand(
         "markYourScope.goToScopeStart");
     assert.equal(right.selection.active.line, 1,
         "parent scope start is the for statement");
@@ -181,6 +185,20 @@ exports.run = async function run() {
     assert.equal(right.selection.start.line, 1);
     assert.ok(right.selections[1].isEqual(secondary),
         "secondary cursors remain unchanged");
+    await vscode.commands.executeCommand(
+        "markYourScope.resetScopeFocus");
+    right.selections = [
+        new vscode.Selection(3, 16, 3, 16), secondary,
+    ];
+    await pause();
+    await vscode.commands.executeCommand(
+        "markYourScope.focusParentScope");
+    await vscode.commands.executeCommand(
+        "markYourScope.goToScopeStart");
+    assert.equal(right.selection.active.line, 3);
+    assert.equal(right.selection.active.character, 12,
+        "first parent of call arguments is the call");
+    assert.ok(right.selections[1].isEqual(secondary));
     right.selection = new vscode.Selection(2, 11, 2, 11);
     await pause();
     await vscode.commands.executeCommand(

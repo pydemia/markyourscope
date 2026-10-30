@@ -11,8 +11,9 @@ code, syntax token colors and other extensions' settings stay untouched.
 ## What it does
 
 - **See the active scope.** Highlight the current block with a quiet
-  background and start/end boundaries. In supported languages, choose a
-  structural block or a smaller expression such as a call or collection.
+  background and start/end boundaries. The default target follows nested
+  clauses, calls, parentheses, returns and assignments as well as functions,
+  classes and control blocks. Expression mode also includes collections.
 - **Follow indentation.** Show guides as lines or alternating whitespace
   bands. Optional advisory marks point out mixed tabs and spaces or
   indentation that does not line up with tab stops.
@@ -40,8 +41,8 @@ and choose the number of logical lines with
 
 | Language | Scope highlighting | Indentation |
 | --- | --- | --- |
-| JavaScript, TypeScript | Blocks; calls, arrays and objects in expression mode | Yes |
-| Python | Functions, classes, control blocks; calls and collections in expression mode | Yes |
+| JavaScript, TypeScript | Functions, classes, control blocks, `else`/`catch`/`finally`, parentheses, calls, returns and assignments; arrays and objects in expression mode | Yes |
+| Python | Functions, classes, control blocks, `elif`/`else`/`except`/`finally`, parentheses, calls, returns and assignments; lists and dictionaries in expression mode | Yes |
 | JSON | Objects and arrays, only when the document parses as standard JSON | Yes |
 | YAML | No syntax scope | Yes |
 | Other languages | No syntax scope | Yes, unless excluded |
@@ -98,7 +99,7 @@ colors fall back one property at a time and produce a warning. Indentation
 warnings are advisory marks, not language diagnostics or automatic fixes.
 
 The extension runs in the desktop extension host. This release was verified
-on Windows x64 with VS Code 1.140.0. Other platforms and remote setups need
+on Windows x64 with VS Code 1.139.1 and 1.140.0. Other platforms and remote setups need
 their own validation.
 
 ## Development

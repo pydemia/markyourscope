@@ -89,11 +89,17 @@ function parseTypeScript(text: string, language: string): ScopeAnalysis {
                 parent.elseStatement === node;
             const isFinally = ts.isTryStatement(parent) &&
                 parent.finallyBlock === node;
+            const clauseKeyword = isElse || isFinally
+                ? parent.getChildren(source).find((child) => child.kind ===
+                    (isElse ? ts.SyntaxKind.ElseKeyword :
+                        ts.SyntaxKind.FinallyKeyword))
+                : undefined;
             scopes.push({
                 kind: isElse ? "else" : isFinally ? "finally" :
                     blockKind(parent),
                 start: isElse || isFinally
-                    ? node.getStart(source) : parent.getStart(source),
+                    ? clauseKeyword?.getStart(source) ?? node.getStart(source)
+                    : parent.getStart(source),
                 end: node.end,
                 level: "block",
             });
@@ -107,12 +113,13 @@ function parseTypeScript(text: string, language: string): ScopeAnalysis {
             });
         }
 
-        if (ts.isCallExpression(node) && text[node.end - 1] === ")") {
+        if ((ts.isCallExpression(node) || ts.isNewExpression(node)) &&
+            text[node.end - 1] === ")") {
             scopes.push({
                 kind: "call",
                 start: node.getStart(source),
                 end: node.end,
-                level: "expression",
+                level: "block",
             });
         } else if (ts.isArrayLiteralExpression(node) &&
             text[node.end - 1] === "]") {
@@ -130,6 +137,59 @@ function parseTypeScript(text: string, language: string): ScopeAnalysis {
                 end: node.end,
                 level: language === "json" ? "block" : "expression",
             });
+        }
+
+        if (language !== "json") {
+            if (ts.isReturnStatement(node)) {
+                scopes.push({
+                    kind: "return",
+                    start: node.getStart(source),
+                    end: node.end,
+                    level: "block",
+                });
+            } else if (ts.isVariableDeclaration(node) && node.initializer) {
+                scopes.push({
+                    kind: "assignment",
+                    start: node.name.getStart(source),
+                    end: node.end,
+                    level: "block",
+                });
+            } else if (ts.isBinaryExpression(node) &&
+                node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+                node.operatorToken.kind <= ts.SyntaxKind.LastAssignment) {
+                scopes.push({
+                    kind: "assignment",
+                    start: node.getStart(source),
+                    end: node.end,
+                    level: "block",
+                });
+            }
+
+            if (ts.isCallExpression(node) || ts.isNewExpression(node) ||
+                ts.isParenthesizedExpression(node) || ts.isFunctionLike(node) ||
+                ts.isIfStatement(node) || ts.isWhileStatement(node) ||
+                ts.isDoStatement(node) || ts.isForStatement(node) ||
+                ts.isForInStatement(node) || ts.isForOfStatement(node) ||
+                ts.isSwitchStatement(node) || ts.isCatchClause(node)) {
+                const children = node.getChildren(source);
+                const opening = children.find((child) =>
+                    child.kind === ts.SyntaxKind.OpenParenToken);
+                const closing = [...children].reverse().find((child) =>
+                    child.kind === ts.SyntaxKind.CloseParenToken);
+                if (opening && closing &&
+                    text[opening.getStart(source)] === "(" &&
+                    text[closing.getStart(source)] === ")" &&
+                    opening.end <= closing.getStart(source)) {
+                    scopes.push({
+                        kind: ts.isCallExpression(node) || ts.isNewExpression(node)
+                            ? "arguments" : ts.isFunctionLike(node)
+                                ? "parameters" : "parentheses",
+                        start: opening.getStart(source),
+                        end: closing.end,
+                        level: "block",
+                    });
+                }
+            }
         }
 
         ts.forEachChild(node, visit);
@@ -153,10 +213,16 @@ const pythonBlocks: Record<string, string> = {
     WithStatement: "with",
 };
 
-const pythonExpressions: Record<string, string> = {
+const pythonNestedScopes: Record<string, string> = {
     CallExpression: "call",
     ArrayExpression: "array",
     DictionaryExpression: "object",
+    ParenthesizedExpression: "parentheses",
+    ArgList: "arguments",
+    ParamList: "parameters",
+    ReturnStatement: "return",
+    AssignStatement: "assignment",
+    AugAssignStatement: "assignment",
 };
 
 function parsePython(text: string): ScopeAnalysis {
@@ -174,22 +240,45 @@ function parsePython(text: string): ScopeAnalysis {
     tree.iterate({
         enter(node) {
             const blockKind = pythonBlocks[node.name];
-            const expressionKind = pythonExpressions[node.name];
-            if (!blockKind && !expressionKind) return;
-            const hasError = errors.some((error) =>
-                node.from <= error.from && error.to <= node.to);
-            if (hasError) return;
-            scopes.push({
-                kind: blockKind || expressionKind,
-                start: node.from,
-                end: node.to,
-                level: blockKind ? "block" : "expression",
-            });
+            const nestedKind = pythonNestedScopes[node.name];
+            if (blockKind || nestedKind) {
+                scopes.push({
+                    kind: blockKind || nestedKind,
+                    start: node.from,
+                    end: node.to,
+                    level: node.name === "ArrayExpression" ||
+                        node.name === "DictionaryExpression"
+                        ? "expression" : "block",
+                });
+            }
+
+            if (node.name === "IfStatement" ||
+                node.name === "TryStatement" ||
+                node.name === "ForStatement" ||
+                node.name === "WhileStatement") {
+                const clauses: Scope[] = [];
+                let kind = `${blockKind} clause`;
+                let start = node.from;
+                for (let child = node.node.firstChild; child;
+                    child = child.nextSibling) {
+                    if (child.name === "elif" || child.name === "else" ||
+                        child.name === "except" || child.name === "finally") {
+                        kind = child.name;
+                        start = child.from;
+                    } else if (child.name === "Body") {
+                        clauses.push({
+                            kind, start, end: child.to, level: "block",
+                        });
+                    }
+                }
+                if (clauses.length > 1) scopes.push(...clauses);
+            }
         },
     });
     return {
         state: errors.length > 0 ? "unresolved" : "supported",
-        scopes,
+        scopes: scopes.filter((scope) => !errors.some((error) =>
+            scope.start <= error.from && error.to <= scope.end)),
     };
 }
 

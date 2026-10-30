@@ -4,7 +4,7 @@
   "description": "Highlight the current code scope and indentation guides in VS Code. Navigate nested blocks and scope boundaries, switch focus modes and tune palettes for JavaScript, TypeScript, Python and JSON.",
   "publisher": "pydemia",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"
@@ -14,7 +14,7 @@
     "url": "https://github.com/pydemia/markyourscope/issues"
   },
   "engines": {
-    "vscode": "^1.140.0"
+    "vscode": "^1.139.1"
   },
   "categories": [
     "Visualization"
@@ -142,7 +142,7 @@
             "lines"
           ],
           "default": "block",
-          "description": "Choose structural blocks, expressions, or nearby logical lines."
+          "description": "Choose nested scopes, include collection expressions, or show nearby logical lines."
         },
         "markYourScope.focus.contextLines": {
           "type": "integer",
