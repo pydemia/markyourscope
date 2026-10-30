@@ -108,3 +108,13 @@ Marketplace URL:
 
 이로써 GitHub Release와 VS Code Marketplace의 공개 게시,
 동일한 VSIX 바이트, Marketplace 검색과 설치를 모두 확인했다.
+
+## 2026-10-30 Marketplace 0.2.0 게시 확인
+
+- 중첩 절·괄호·호출·반환·대입 범위와 VS Code 1.139.1 호환성을 `main` 커밋 `2a792eefa36ff901ec7111eb43a0515253922a66`에 반영하고 원격 SHA를 대조했다.
+- `npm run check`, `npm test` 32/32, VS Code 1.139.1 및 1.140.0 Extension Host를 통과했다.
+- 후보 `mark-your-scope-0.2.0.vsix`의 ID는 `pydemia.mark-your-scope`, 버전은 `0.2.0`, 엔진은 `^1.139.1`이다. SHA-256은 `1000AA68DDD0939CD7051C52FBA83C2410272282C90F4D415F63A20FE8F12959`다.
+- 격리된 VS Code 1.139.1 프로필에서 후보 VSIX를 설치해 `pydemia.mark-your-scope@0.2.0`을 확인했다.
+- `vsce verify-pat pydemia` 통과 후 동일한 VSIX를 `vsce publish --packagePath`로 게시했다. 게시자 Gallery에서 버전 `0.2.0`과 같은 SHA-256을 확인했고, 검증 완료 플래그가 설정됐다.
+- 공개 Gallery의 최신 버전은 `0.2.0`이며 엔진 `^1.139.1`과 같은 SHA-256을 표시한다. [Marketplace 페이지](https://marketplace.visualstudio.com/items?itemName=pydemia.mark-your-scope)는 HTTP 200과 `0.2.0`을 반환한다. 공개 CDN의 VSIX를 다시 내려받아 같은 SHA-256을 확인했다.
+- `vsce search "Mark Your Scope"`에 ID가 나타나고, 새 격리 VS Code 1.139.1 프로필에서 Marketplace ID로 설치한 결과 `pydemia.mark-your-scope@0.2.0`을 확인했다.
