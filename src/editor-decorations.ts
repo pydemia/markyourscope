@@ -8,6 +8,12 @@ export interface DecorationSet {
     indentationWarning: vscode.TextEditorDecorationType;
     scopeBalanced: vscode.TextEditorDecorationType;
     scopeFocus: vscode.TextEditorDecorationType;
+    outsideDim: vscode.TextEditorDecorationType;
+    outsideDimFocus: vscode.TextEditorDecorationType;
+    parentRail: vscode.TextEditorDecorationType;
+    currentRail: vscode.TextEditorDecorationType;
+    parentStart: vscode.TextEditorDecorationType;
+    parentEnd: vscode.TextEditorDecorationType;
     start: vscode.TextEditorDecorationType;
     end: vscode.TextEditorDecorationType;
 }
@@ -50,6 +56,36 @@ export class EditorDecorations implements vscode.Disposable {
             }),
             scopeFocus: vscode.window.createTextEditorDecorationType({
                 backgroundColor: colors.scopeFocus,
+                isWholeLine: true,
+            }),
+            outsideDim: vscode.window.createTextEditorDecorationType({
+                opacity: "0.64",
+                isWholeLine: true,
+            }),
+            outsideDimFocus: vscode.window.createTextEditorDecorationType({
+                opacity: "0.48",
+                isWholeLine: true,
+            }),
+            parentRail: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "solid",
+                borderWidth: "0 0 0 2px",
+            }),
+            currentRail: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.boundary,
+                borderStyle: "solid",
+                borderWidth: "0 0 0 2px",
+            }),
+            parentStart: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "solid",
+                borderWidth: "1px 0 0 0",
+                isWholeLine: true,
+            }),
+            parentEnd: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "solid",
+                borderWidth: "0 0 1px 0",
                 isWholeLine: true,
             }),
             start: vscode.window.createTextEditorDecorationType({

@@ -24,7 +24,11 @@ import {
     type ThemeKind,
 } from "./palette";
 import { analyzeScopes, scopesAt, type Scope, type ScopeAnalysis } from "./scope";
-import { visibleLineIntersections } from "./visible";
+import {
+    subtractLineSpan,
+    visibleLineIntersections,
+    type LineSpan,
+} from "./visible";
 
 const MAX_LINES = 20_000;
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -77,6 +81,12 @@ export function activate(context: vscode.ExtensionContext): void {
     ): void {
         editor.setDecorations(types.scopeBalanced, []);
         editor.setDecorations(types.scopeFocus, []);
+        editor.setDecorations(types.outsideDim, []);
+        editor.setDecorations(types.outsideDimFocus, []);
+        editor.setDecorations(types.parentRail, []);
+        editor.setDecorations(types.currentRail, []);
+        editor.setDecorations(types.parentStart, []);
+        editor.setDecorations(types.parentEnd, []);
         editor.setDecorations(types.start, []);
         editor.setDecorations(types.end, []);
     }
@@ -189,36 +199,96 @@ export function activate(context: vscode.ExtensionContext): void {
     function paintRange(
         editor: vscode.TextEditor,
         types: DecorationSet,
-        start: number,
-        end: number,
+        current: LineSpan,
         background: "balanced" | "focus" | "none",
+        parent?: LineSpan,
+        rails?: { current: Scope; parent?: Scope },
     ): void {
         const document = editor.document;
-        const visible = visibleLineIntersections(
-            { startLine: start, endLine: end },
-            editor.visibleRanges,
-        );
-        const ranges = visible.map(({ startLine, endLine }) =>
+        const visible = visibleLineIntersections(current, editor.visibleRanges);
+        const visibleParent = parent
+            ? visibleLineIntersections(parent, editor.visibleRanges) : [];
+        const toRanges = (spans: readonly LineSpan[]) => spans.map((span) =>
             new vscode.Range(
-                startLine,
+                span.startLine,
                 0,
-                endLine,
-                document.lineAt(endLine).text.length,
+                span.endLine,
+                document.lineAt(span.endLine).text.length,
             ));
-        editor.setDecorations(
-            types.scopeBalanced, background === "balanced" ? ranges : []);
-        editor.setDecorations(
-            types.scopeFocus, background === "focus" ? ranges : []);
+        const spotlight = rails !== undefined && background !== "none";
+        const parentOnly = subtractLineSpan(visibleParent, current);
+        const allVisible = visibleLineIntersections({
+            startLine: 0,
+            endLine: document.lineCount - 1,
+        }, editor.visibleRanges);
+        const theme = themeKind();
+        const outside = spotlight && theme !== "highContrast" &&
+            theme !== "highContrastLight"
+            ? subtractLineSpan(allVisible, parent ?? current) : [];
+        editor.setDecorations(types.scopeBalanced,
+            spotlight ? toRanges(parentOnly) :
+                background === "balanced" ? toRanges(visible) : []);
+        editor.setDecorations(types.scopeFocus,
+            spotlight || background === "focus" ? toRanges(visible) : []);
+        editor.setDecorations(types.outsideDim,
+            background === "balanced" ? toRanges(outside) : []);
+        editor.setDecorations(types.outsideDimFocus,
+            background === "focus" ? toRanges(outside) : []);
+        const toRailRanges = (spans: readonly LineSpan[], column: number) => {
+            const ranges: vscode.Range[] = [];
+            for (const span of spans) {
+                for (let line = span.startLine; line <= span.endLine; line++) {
+                    const text = document.lineAt(line).text;
+                    if (text[column] === " " || text[column] === "\t") {
+                        ranges.push(new vscode.Range(
+                            line, column, line, column + 1));
+                    }
+                }
+            }
+            return ranges;
+        };
+        const railColumn = (scope: Scope) => document.lineAt(
+            document.positionAt(scope.start).line)
+            .firstNonWhitespaceCharacterIndex - 1;
+        const railRanges = (scope: Scope, excluded?: LineSpan) => {
+            const startLine = document.positionAt(scope.start).line;
+            const endLine = document.positionAt(scope.end - 1).line;
+            const column = railColumn(scope);
+            if (column < 0) return [];
+            const spans = visibleLineIntersections(
+                { startLine, endLine }, editor.visibleRanges);
+            return toRailRanges(excluded
+                ? subtractLineSpan(spans, excluded) : spans, column);
+        };
+        const currentRail = rails ? railRanges(rails.current) : [];
+        const parentRail = rails?.parent
+            ? railRanges(rails.parent, railColumn(rails.parent) ===
+                railColumn(rails.current) ? current : undefined)
+            : [];
+        editor.setDecorations(types.parentRail, parentRail);
+        editor.setDecorations(types.currentRail, currentRail);
         editor.setDecorations(
             types.start,
-            visible.some((range) => range.startLine <= start &&
-                start <= range.endLine) ? [lineRange(document, start)] : [],
+            visible.some((range) => range.startLine <= current.startLine &&
+                current.startLine <= range.endLine)
+                ? [lineRange(document, current.startLine)] : [],
         );
         editor.setDecorations(
             types.end,
-            visible.some((range) => range.startLine <= end &&
-                end <= range.endLine) ? [lineRange(document, end)] : [],
+            visible.some((range) => range.startLine <= current.endLine &&
+                current.endLine <= range.endLine)
+                ? [lineRange(document, current.endLine)] : [],
         );
+        const parentStartVisible = parent && visibleParent.some((range) =>
+            range.startLine <= parent.startLine &&
+            parent.startLine <= range.endLine);
+        const parentEndVisible = parent && visibleParent.some((range) =>
+            range.startLine <= parent.endLine &&
+            parent.endLine <= range.endLine);
+        editor.setDecorations(types.parentStart,
+            parentStartVisible ? [lineRange(document, parent.startLine)] : []);
+        editor.setDecorations(types.parentEnd,
+            parentEndVisible ? [lineRange(document, parent.endLine)] : []);
     }
 
     function modeWriteLocation(
@@ -270,21 +340,25 @@ export function activate(context: vscode.ExtensionContext): void {
         });
     }
 
-    function focusedScope(
+    function focusedScopes(
         editor: vscode.TextEditor,
         analysis: ScopeAnalysis | null,
         target: "block" | "expression",
-    ): Scope | undefined {
+    ): { current?: Scope; parent?: Scope } {
         const focus = editorFocus.get(editor);
         const current = editor.selection.active;
         const retained = focus?.anchor.isEqual(current) ? focus : undefined;
-        if (retained?.pinnedScope) return retained.pinnedScope;
         const origin = retained?.origin ?? current;
         const candidates = analysis
             ? scopesAt(analysis.scopes, editor.document.offsetAt(origin), target)
             : [];
-        return candidates[Math.min(
-            retained?.parentIndex ?? 0, candidates.length - 1)];
+        const index = retained?.pinnedScope
+            ? candidates.indexOf(retained.pinnedScope)
+            : Math.min(retained?.parentIndex ?? 0, candidates.length - 1);
+        return {
+            current: retained?.pinnedScope ?? candidates[index],
+            parent: index >= 0 ? candidates[index + 1] : undefined,
+        };
     }
 
     function navigableScope(editor: vscode.TextEditor): Scope | undefined {
@@ -301,8 +375,8 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         const target = focusTarget(config.get<string>(
             "focus.target", "block"));
-        return focusedScope(editor, analyze(editor.document),
-            target === "expression" ? "expression" : "block");
+        return focusedScopes(editor, analyze(editor.document),
+            target === "expression" ? "expression" : "block").current;
     }
 
     function navigateScope(action: "start" | "end" | "select"): void {
@@ -572,7 +646,8 @@ export function activate(context: vscode.ExtensionContext): void {
                 anchor.line + display.contextLines,
             );
             paintRange(
-                editor, types, start, end, display.scopeBackground);
+                editor, types, { startLine: start, endLine: end },
+                display.scopeBackground);
             if (editor === vscode.window.activeTextEditor) {
                 status.text = `Scope: 주변 L${start + 1}–L${end + 1}`;
                 status.show();
@@ -596,7 +671,8 @@ export function activate(context: vscode.ExtensionContext): void {
         editorFocus.set(editor, retained ?? {
             anchor, origin: anchor, parentIndex: 0,
         });
-        const scope = focusedScope(editor, analysis, display.target);
+        const { current: scope, parent } = focusedScopes(
+            editor, analysis, display.target);
         if (!scope) {
             clearScope(editor, types);
             if (editor === vscode.window.activeTextEditor) {
@@ -616,9 +692,19 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const start = document.positionAt(scope.start).line;
         const end = document.positionAt(scope.end - 1).line;
-        paintRange(editor, types, start, end, display.scopeBackground);
+        const parentRange = parent ? {
+            startLine: document.positionAt(parent.start).line,
+            endLine: document.positionAt(parent.end - 1).line,
+        } : undefined;
+        paintRange(editor, types, { startLine: start, endLine: end },
+            display.scopeBackground, parentRange,
+            { current: scope, parent });
         if (editor === vscode.window.activeTextEditor) {
-            status.text = `Scope: ${scope.kind} · L${start + 1}–L${end + 1}`;
+            const parentLabel = parentRange && parent
+                ? ` ↑ ${parent.kind} · L${parentRange.startLine + 1}–` +
+                    `L${parentRange.endLine + 1}` : "";
+            status.text = `Scope: ${scope.kind} · L${start + 1}–` +
+                `L${end + 1}${parentLabel}`;
             status.show();
         }
     }

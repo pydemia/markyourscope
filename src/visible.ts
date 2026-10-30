@@ -24,3 +24,26 @@ export function visibleLineIntersections(
     }
     return intersections;
 }
+
+/** Remove one inclusive line span from a list of visible spans. */
+export function subtractLineSpan(
+    spans: readonly LineSpan[],
+    excluded: LineSpan,
+): LineSpan[] {
+    const result: LineSpan[] = [];
+    for (const span of spans) {
+        if (span.startLine < excluded.startLine) {
+            const endLine = Math.min(span.endLine, excluded.startLine - 1);
+            if (span.startLine <= endLine) {
+                result.push({ startLine: span.startLine, endLine });
+            }
+        }
+        if (span.endLine > excluded.endLine) {
+            const startLine = Math.max(span.startLine, excluded.endLine + 1);
+            if (startLine <= span.endLine) {
+                result.push({ startLine, endLine: span.endLine });
+            }
+        }
+    }
+    return result;
+}

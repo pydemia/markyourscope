@@ -10,8 +10,10 @@ code, syntax token colors and other extensions' settings stay untouched.
 
 ## What it does
 
-- **See the active scope.** Highlight the current block with a quiet
-  background and start/end boundaries. The default target follows nested
+- **See the active scope and its parent.** Keep the parent in color, give the
+  current block a stronger background and boundaries, and dim lines outside
+  the parent. Scope rails follow their indentation when whitespace allows.
+  The default target follows nested
   clauses, calls, parentheses, returns and assignments as well as functions,
   classes and control blocks. Expression mode also includes collections.
 - **Follow indentation.** Show guides as lines or alternating whitespace
@@ -27,12 +29,15 @@ code, syntax token colors and other extensions' settings stay untouched.
 
 | Mode | Indentation | Current scope |
 | --- | --- | --- |
-| Balanced (default) | Subtle lines | Light background and boundaries |
-| Structure | Alternating whitespace bands | Boundaries without a scope background |
-| Focus | Minimal lines | Stronger background and boundaries |
+| Balanced (default) | Subtle lines | Parent color, stronger current block, scope rails and softly dimmed outside lines |
+| Structure | Alternating whitespace bands | Parent/current rails and boundaries without dimming |
+| Focus | Minimal lines | Balanced spotlight with stronger outside dimming |
 | Off | Hidden | Hidden |
 
 The mode sets defaults; an explicit indentation style setting takes priority.
+High contrast themes keep outside lines at full opacity. Rails appear only in
+available leading whitespace, so inline nested scopes rely on their
+boundaries and the parent label in the status bar.
 If you only want nearby context, set `markYourScope.focus.target` to `lines`
 and choose the number of logical lines with
 `markYourScope.focus.contextLines`.
@@ -78,7 +83,8 @@ Available commands include:
 
 Commands have no default keyboard shortcuts. Assign them in VS Code's
 Keyboard Shortcuts editor if desired. The status bar names the current scope
-and its line range, or explains why no scope is displayed.
+and its immediate parent with their line ranges, or explains why no scope is
+displayed.
 
 ## Settings
 
@@ -99,7 +105,7 @@ colors fall back one property at a time and produce a warning. Indentation
 warnings are advisory marks, not language diagnostics or automatic fixes.
 
 The extension runs in the desktop extension host. This release was verified
-on Windows x64 with VS Code 1.139.1 and 1.140.0. Other platforms and remote setups need
+on Windows x64 with VS Code 1.140.0. Other platforms and remote setups need
 their own validation.
 
 ## Development

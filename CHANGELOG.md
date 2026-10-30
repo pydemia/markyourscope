@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Keep the immediate parent scope visible while giving the current scope a stronger highlight.
+- Dim code outside the parent scope in Balanced and Focus modes; high contrast themes keep full opacity.
+- Add separate scope rails in available indentation whitespace and show the parent in the status bar.
+
 ## 0.2.0
 
 - Show nested Python `elif`, `else`, `except`, and `finally` clauses as separate scopes.
