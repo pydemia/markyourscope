@@ -16,6 +16,7 @@ export interface PaletteColors {
     indentBandEven: string;
     indentBandOdd: string;
     scopeBalanced: string;
+    scopeAncestor: string;
     scopeFocus: string;
     boundary: string;
 }
@@ -47,6 +48,7 @@ export function paletteColors(
                 indentBandEven: "rgba(72, 72, 72, 0.07)",
                 indentBandOdd: "rgba(72, 72, 72, 0.035)",
                 scopeBalanced: "rgba(72, 72, 72, 0.07)",
+                scopeAncestor: "rgba(72, 72, 72, 0.035)",
                 scopeFocus: "rgba(72, 72, 72, 0.13)",
                 boundary: "#4A6074",
             };
@@ -58,6 +60,7 @@ export function paletteColors(
                 indentBandEven: `rgba(${base}, 0.07)`,
                 indentBandOdd: `rgba(${base}, 0.04)`,
                 scopeBalanced: `rgba(${base}, 0.04)`,
+                scopeAncestor: `rgba(${base}, 0.02)`,
                 scopeFocus: `rgba(${base}, 0.08)`,
                 boundary: light ? "#000000" : "#FFFFFF",
             };
@@ -70,6 +73,7 @@ export function paletteColors(
                 indentBandEven: `rgba(${base}, 0.07)`,
                 indentBandOdd: `rgba(${base}, 0.035)`,
                 scopeBalanced: `rgba(${base}, 0.07)`,
+                scopeAncestor: `rgba(${base}, 0.035)`,
                 scopeFocus: `rgba(${base}, 0.14)`,
                 boundary: light ? "#555555" : "#BBBBBB",
             };
@@ -81,6 +85,7 @@ export function paletteColors(
                 indentBandEven: "rgba(128, 128, 128, 0.08)",
                 indentBandOdd: "rgba(128, 128, 128, 0.04)",
                 scopeBalanced: "rgba(128, 128, 128, 0.08)",
+                scopeAncestor: "rgba(128, 128, 128, 0.04)",
                 scopeFocus: "rgba(128, 128, 128, 0.16)",
                 boundary: "#8EAFC6",
             };

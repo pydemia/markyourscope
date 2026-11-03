@@ -2,6 +2,7 @@
 .gitignore
 .vscode/**
 .vscode-test/**
+.codex-remote-attachments/**
 .worknotes/**
 docs/**
 node_modules/**

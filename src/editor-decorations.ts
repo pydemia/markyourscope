@@ -7,13 +7,17 @@ export interface DecorationSet {
     indentBandOdd: vscode.TextEditorDecorationType;
     indentationWarning: vscode.TextEditorDecorationType;
     scopeBalanced: vscode.TextEditorDecorationType;
+    scopeAncestor: vscode.TextEditorDecorationType;
     scopeFocus: vscode.TextEditorDecorationType;
     outsideDim: vscode.TextEditorDecorationType;
     outsideDimFocus: vscode.TextEditorDecorationType;
     parentRail: vscode.TextEditorDecorationType;
+    ancestorRail: vscode.TextEditorDecorationType;
     currentRail: vscode.TextEditorDecorationType;
     parentStart: vscode.TextEditorDecorationType;
     parentEnd: vscode.TextEditorDecorationType;
+    ancestorStart: vscode.TextEditorDecorationType;
+    ancestorEnd: vscode.TextEditorDecorationType;
     start: vscode.TextEditorDecorationType;
     end: vscode.TextEditorDecorationType;
 }
@@ -54,6 +58,10 @@ export class EditorDecorations implements vscode.Disposable {
                 backgroundColor: colors.scopeBalanced,
                 isWholeLine: true,
             }),
+            scopeAncestor: vscode.window.createTextEditorDecorationType({
+                backgroundColor: colors.scopeAncestor,
+                isWholeLine: true,
+            }),
             scopeFocus: vscode.window.createTextEditorDecorationType({
                 backgroundColor: colors.scopeFocus,
                 isWholeLine: true,
@@ -71,6 +79,11 @@ export class EditorDecorations implements vscode.Disposable {
                 borderStyle: "solid",
                 borderWidth: "0 0 0 2px",
             }),
+            ancestorRail: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "solid",
+                borderWidth: "0 0 0 1px",
+            }),
             currentRail: vscode.window.createTextEditorDecorationType({
                 borderColor: colors.boundary,
                 borderStyle: "solid",
@@ -85,6 +98,18 @@ export class EditorDecorations implements vscode.Disposable {
             parentEnd: vscode.window.createTextEditorDecorationType({
                 borderColor: colors.indentLine,
                 borderStyle: "solid",
+                borderWidth: "0 0 1px 0",
+                isWholeLine: true,
+            }),
+            ancestorStart: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "dotted",
+                borderWidth: "1px 0 0 0",
+                isWholeLine: true,
+            }),
+            ancestorEnd: vscode.window.createTextEditorDecorationType({
+                borderColor: colors.indentLine,
+                borderStyle: "dotted",
                 borderWidth: "0 0 1px 0",
                 isWholeLine: true,
             }),

@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { analyzeScopes, scopesAt } from "../src/scope";
+import { selectSpotlightLayers } from "../src/visible";
+
+test("one-line Python calls retain the class as a visible spotlight layer", () => {
+    const text = [
+        "class Config:",
+        "    host: str | None = Field(default_factory=lambda: os.getenv(\"KEY\"))",
+        "    port: int | None = Field(default_factory=lambda: os.getenv(\"PORT\"))",
+    ].join("\n");
+    const scopes = scopesAt(analyzeScopes(text, "python").scopes,
+        text.indexOf("default_factory"), "block");
+    const lines = scopes.map((scope) => ({
+        startLine: text.slice(0, scope.start).split("\n").length - 1,
+        endLine: text.slice(0, scope.end - 1).split("\n").length - 1,
+    }));
+    assert.deepEqual(scopes.map((scope) => scope.kind),
+        ["arguments", "call", "assignment", "class"]);
+    assert.deepEqual(selectSpotlightLayers(lines, 3), [
+        { startLine: 1, endLine: 1 },
+        { startLine: 0, endLine: 2 },
+    ]);
+});
 
 test("Python selects nested call and structural scopes", () => {
     const text = [

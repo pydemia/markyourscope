@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { subtractLineSpan, visibleLineIntersections } from "../src/visible";
+import {
+    selectSpotlightLayers,
+    subtractLineSpan,
+    visibleLineIntersections,
+} from "../src/visible";
 
 test("scope decoration stays inside disjoint visible ranges", () => {
     assert.deepEqual(visibleLineIntersections(
@@ -41,4 +45,31 @@ test("spotlight leaves the parent visible and dims only outside lines", () => {
         { startLine: 2, endLine: 3 },
         { startLine: 7, endLine: 7 },
     ]);
+});
+
+test("inline parentheses do not consume visual depth or dim the file", () => {
+    const spans = [
+        { startLine: 2, endLine: 2 },
+        { startLine: 2, endLine: 2 },
+        { startLine: 2, endLine: 2 },
+        { startLine: 0, endLine: 12 },
+        { startLine: 0, endLine: 25 },
+    ];
+    assert.deepEqual(selectSpotlightLayers(spans, 3), [
+        spans[0], spans[3], spans[4],
+    ]);
+    assert.deepEqual(selectSpotlightLayers(spans.slice(0, 3), 3), [
+        spans[0],
+    ]);
+});
+
+test("visual depth counts distinct line ranges", () => {
+    const spans = [
+        { startLine: 8, endLine: 9 },
+        { startLine: 7, endLine: 10 },
+        { startLine: 5, endLine: 14 },
+        { startLine: 0, endLine: 20 },
+    ];
+    assert.deepEqual(selectSpotlightLayers(spans, 2), spans.slice(0, 2));
+    assert.deepEqual(selectSpotlightLayers(spans, 3), spans.slice(0, 3));
 });

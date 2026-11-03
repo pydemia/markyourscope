@@ -10,9 +10,12 @@ code, syntax token colors and other extensions' settings stay untouched.
 
 ## What it does
 
-- **See the active scope and its parent.** Keep the parent in color, give the
-  current block a stronger background and boundaries, and dim lines outside
-  the parent. Scope rails follow their indentation when whitespace allows.
+- **See nested scopes without losing their context.** Give the current scope
+  a strong background, its parent a softer one, and farther ancestors faint
+  color and rails. Dim lines outside the outermost visible scope. Scopes that
+  occupy the same logical lines share one visual level, so a one-line call
+  inside a class keeps the class readable. Scope rails follow indentation
+  when whitespace allows.
   The default target follows nested
   clauses, calls, parentheses, returns and assignments as well as functions,
   classes and control blocks. Expression mode also includes collections.
@@ -29,15 +32,18 @@ code, syntax token colors and other extensions' settings stay untouched.
 
 | Mode | Indentation | Current scope |
 | --- | --- | --- |
-| Balanced (default) | Subtle lines | Parent color, stronger current block, scope rails and softly dimmed outside lines |
-| Structure | Alternating whitespace bands | Parent/current rails and boundaries without dimming |
+| Balanced (default) | Subtle lines | Up to three distinct scope levels, scope rails and softly dimmed outside lines |
+| Structure | Alternating whitespace bands | Scope rails and boundaries without dimming |
 | Focus | Minimal lines | Balanced spotlight with stronger outside dimming |
 | Off | Hidden | Hidden |
 
 The mode sets defaults; an explicit indentation style setting takes priority.
 High contrast themes keep outside lines at full opacity. Rails appear only in
 available leading whitespace, so inline nested scopes rely on their
-boundaries and the parent label in the status bar.
+boundaries and the parent label in the status bar. Set
+`markYourScope.spotlight.depth` from 1 to 6 to choose how many distinct
+line-level scopes are shown; the default is 3. A one-line scope with no
+multi-line ancestor does not dim the rest of the document.
 If you only want nearby context, set `markYourScope.focus.target` to `lines`
 and choose the number of logical lines with
 `markYourScope.focus.contextLines`.
@@ -96,8 +102,9 @@ displayed.
 | `markYourScope.indentation.warnings` | `off` | `mixed` marks mixed tabs/spaces; `all` also marks indentation outside tab stops |
 | `markYourScope.focus.target` | `block` | `block`, `expression`, `lines` |
 | `markYourScope.focus.contextLines` | `3` | Logical lines above and below the cursor in `lines` mode |
+| `markYourScope.spotlight.depth` | `3` | Distinct scope levels to show, including the current scope; 1–6 |
 | `markYourScope.palette` | `auto` | `auto`, `darkSoft`, `lightSoft`, `highContrast`, `monochrome` |
-| `markYourScope.palette.customColors` | `{}` | Optional `#RRGGBB` or `#RRGGBBAA` values for `indentLine`, `indentBandEven`, `indentBandOdd`, `scopeBalanced`, `scopeFocus`, `boundary` |
+| `markYourScope.palette.customColors` | `{}` | Optional `#RRGGBB` or `#RRGGBBAA` values for `indentLine`, `indentBandEven`, `indentBandOdd`, `scopeBalanced`, `scopeAncestor`, `scopeFocus`, `boundary` |
 | `markYourScope.excludedLanguages` | `["plaintext", "markdown"]` | Language IDs with no decorations |
 
 `auto` follows the active light, dark or high contrast theme. Invalid custom

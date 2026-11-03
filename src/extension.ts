@@ -25,6 +25,7 @@ import {
 } from "./palette";
 import { analyzeScopes, scopesAt, type Scope, type ScopeAnalysis } from "./scope";
 import {
+    selectSpotlightLayers,
     subtractLineSpan,
     visibleLineIntersections,
     type LineSpan,
@@ -80,13 +81,17 @@ export function activate(context: vscode.ExtensionContext): void {
         types: DecorationSet,
     ): void {
         editor.setDecorations(types.scopeBalanced, []);
+        editor.setDecorations(types.scopeAncestor, []);
         editor.setDecorations(types.scopeFocus, []);
         editor.setDecorations(types.outsideDim, []);
         editor.setDecorations(types.outsideDimFocus, []);
         editor.setDecorations(types.parentRail, []);
+        editor.setDecorations(types.ancestorRail, []);
         editor.setDecorations(types.currentRail, []);
         editor.setDecorations(types.parentStart, []);
         editor.setDecorations(types.parentEnd, []);
+        editor.setDecorations(types.ancestorStart, []);
+        editor.setDecorations(types.ancestorEnd, []);
         editor.setDecorations(types.start, []);
         editor.setDecorations(types.end, []);
     }
@@ -201,11 +206,11 @@ export function activate(context: vscode.ExtensionContext): void {
         types: DecorationSet,
         current: LineSpan,
         background: "balanced" | "focus" | "none",
-        parent?: LineSpan,
-        rails?: { current: Scope; parent?: Scope },
+        layers?: readonly { scope: Scope; span: LineSpan }[],
     ): void {
         const document = editor.document;
         const visible = visibleLineIntersections(current, editor.visibleRanges);
+        const parent = layers?.[1]?.span;
         const visibleParent = parent
             ? visibleLineIntersections(parent, editor.visibleRanges) : [];
         const toRanges = (spans: readonly LineSpan[]) => spans.map((span) =>
@@ -215,19 +220,28 @@ export function activate(context: vscode.ExtensionContext): void {
                 span.endLine,
                 document.lineAt(span.endLine).text.length,
             ));
-        const spotlight = rails !== undefined && background !== "none";
+        const spotlight = layers !== undefined && background !== "none";
         const parentOnly = subtractLineSpan(visibleParent, current);
+        const ancestorOnly = layers?.slice(2).flatMap((layer, index) =>
+            subtractLineSpan(
+                visibleLineIntersections(layer.span, editor.visibleRanges),
+                layers[index + 1].span,
+            )) ?? [];
         const allVisible = visibleLineIntersections({
             startLine: 0,
             endLine: document.lineCount - 1,
         }, editor.visibleRanges);
         const theme = themeKind();
+        const outer = layers?.[layers.length - 1]?.span ?? current;
         const outside = spotlight && theme !== "highContrast" &&
-            theme !== "highContrastLight"
-            ? subtractLineSpan(allVisible, parent ?? current) : [];
+            theme !== "highContrastLight" &&
+            outer.endLine > outer.startLine
+            ? subtractLineSpan(allVisible, outer) : [];
         editor.setDecorations(types.scopeBalanced,
             spotlight ? toRanges(parentOnly) :
                 background === "balanced" ? toRanges(visible) : []);
+        editor.setDecorations(types.scopeAncestor,
+            spotlight ? toRanges(ancestorOnly) : []);
         editor.setDecorations(types.scopeFocus,
             spotlight || background === "focus" ? toRanges(visible) : []);
         editor.setDecorations(types.outsideDim,
@@ -250,22 +264,30 @@ export function activate(context: vscode.ExtensionContext): void {
         const railColumn = (scope: Scope) => document.lineAt(
             document.positionAt(scope.start).line)
             .firstNonWhitespaceCharacterIndex - 1;
-        const railRanges = (scope: Scope, excluded?: LineSpan) => {
+        const railRanges = (scope: Scope, excluded: readonly LineSpan[]) => {
             const startLine = document.positionAt(scope.start).line;
             const endLine = document.positionAt(scope.end - 1).line;
             const column = railColumn(scope);
             if (column < 0) return [];
             const spans = visibleLineIntersections(
                 { startLine, endLine }, editor.visibleRanges);
-            return toRailRanges(excluded
-                ? subtractLineSpan(spans, excluded) : spans, column);
+            let available = spans;
+            for (const inner of excluded) {
+                available = subtractLineSpan(available, inner);
+            }
+            return toRailRanges(available, column);
         };
-        const currentRail = rails ? railRanges(rails.current) : [];
-        const parentRail = rails?.parent
-            ? railRanges(rails.parent, railColumn(rails.parent) ===
-                railColumn(rails.current) ? current : undefined)
-            : [];
+        const rails = layers?.map((layer, index) => railRanges(
+            layer.scope,
+            (layers ?? []).slice(0, index)
+                .filter((inner) => railColumn(inner.scope) ===
+                    railColumn(layer.scope))
+                .map((inner) => inner.span),
+        )) ?? [];
+        const currentRail = rails[0] ?? [];
+        const parentRail = rails[1] ?? [];
         editor.setDecorations(types.parentRail, parentRail);
+        editor.setDecorations(types.ancestorRail, rails.slice(2).flat());
         editor.setDecorations(types.currentRail, currentRail);
         editor.setDecorations(
             types.start,
@@ -286,9 +308,25 @@ export function activate(context: vscode.ExtensionContext): void {
             range.startLine <= parent.endLine &&
             parent.endLine <= range.endLine);
         editor.setDecorations(types.parentStart,
-            parentStartVisible ? [lineRange(document, parent.startLine)] : []);
+            parentStartVisible && parent!.startLine !== current.startLine
+                ? [lineRange(document, parent!.startLine)] : []);
         editor.setDecorations(types.parentEnd,
-            parentEndVisible ? [lineRange(document, parent.endLine)] : []);
+            parentEndVisible && parent!.endLine !== current.endLine
+                ? [lineRange(document, parent!.endLine)] : []);
+        const ancestorBoundaries = (edge: "startLine" | "endLine") =>
+            layers?.slice(2).flatMap((layer, index) => {
+                const line = layer.span[edge];
+                const inner = layers[index + 1].span;
+                return line !== inner[edge] &&
+                    visibleLineIntersections(
+                        { startLine: line, endLine: line },
+                        editor.visibleRanges,
+                    ).length > 0 ? [lineRange(document, line)] : [];
+            }) ?? [];
+        editor.setDecorations(types.ancestorStart,
+            ancestorBoundaries("startLine"));
+        editor.setDecorations(types.ancestorEnd,
+            ancestorBoundaries("endLine"));
     }
 
     function modeWriteLocation(
@@ -344,7 +382,7 @@ export function activate(context: vscode.ExtensionContext): void {
         editor: vscode.TextEditor,
         analysis: ScopeAnalysis | null,
         target: "block" | "expression",
-    ): { current?: Scope; parent?: Scope } {
+    ): { current?: Scope; parent?: Scope; ancestors: Scope[] } {
         const focus = editorFocus.get(editor);
         const current = editor.selection.active;
         const retained = focus?.anchor.isEqual(current) ? focus : undefined;
@@ -358,6 +396,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return {
             current: retained?.pinnedScope ?? candidates[index],
             parent: index >= 0 ? candidates[index + 1] : undefined,
+            ancestors: index >= 0 ? candidates.slice(index + 1) : [],
         };
     }
 
@@ -671,7 +710,7 @@ export function activate(context: vscode.ExtensionContext): void {
         editorFocus.set(editor, retained ?? {
             anchor, origin: anchor, parentIndex: 0,
         });
-        const { current: scope, parent } = focusedScopes(
+        const { current: scope, parent, ancestors } = focusedScopes(
             editor, analysis, display.target);
         if (!scope) {
             clearScope(editor, types);
@@ -692,13 +731,26 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const start = document.positionAt(scope.start).line;
         const end = document.positionAt(scope.end - 1).line;
+        const candidates = [scope, ...ancestors].map((candidate) => ({
+            scope: candidate,
+            span: {
+                startLine: document.positionAt(candidate.start).line,
+                endLine: document.positionAt(candidate.end - 1).line,
+            },
+        }));
+        const configuredDepth = config.get<number>("spotlight.depth", 3);
+        const depth = Number.isInteger(configuredDepth)
+            ? Math.max(1, Math.min(6, configuredDepth)) : 3;
+        const visualSpans = selectSpotlightLayers(
+            candidates.map((candidate) => candidate.span), depth);
+        const layers = visualSpans.map((span) =>
+            candidates.find((candidate) => candidate.span === span)!);
         const parentRange = parent ? {
             startLine: document.positionAt(parent.start).line,
             endLine: document.positionAt(parent.end - 1).line,
         } : undefined;
         paintRange(editor, types, { startLine: start, endLine: end },
-            display.scopeBackground, parentRange,
-            { current: scope, parent });
+            display.scopeBackground, layers);
         if (editor === vscode.window.activeTextEditor) {
             const parentLabel = parentRange && parent
                 ? ` ↑ ${parent.kind} · L${parentRange.startLine + 1}–` +

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Keep line-distinct ancestors visible through inline parentheses, calls, and assignments; one-line top-level scopes no longer dim the whole document.
+- Add `markYourScope.spotlight.depth` (1–6, default 3) for visible scope levels, with faint ancestor backgrounds and rails.
+- Add `scopeAncestor` to custom palette colors.
+
 ## 0.3.0
 
 - Keep the immediate parent scope visible while giving the current scope a stronger highlight.

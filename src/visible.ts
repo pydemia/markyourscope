@@ -47,3 +47,19 @@ export function subtractLineSpan(
     }
     return result;
 }
+
+/** Keep distinct line footprints; inline syntax scopes do not spend depth. */
+export function selectSpotlightLayers(
+    spans: readonly LineSpan[],
+    depth: number,
+): LineSpan[] {
+    const selected: LineSpan[] = [];
+    for (const span of spans) {
+        if (selected.length >= depth) break;
+        const previous = selected[selected.length - 1];
+        if (previous?.startLine === span.startLine &&
+            previous.endLine === span.endLine) continue;
+        selected.push(span);
+    }
+    return selected;
+}
