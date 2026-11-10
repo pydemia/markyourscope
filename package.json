@@ -4,7 +4,7 @@
   "description": "Highlight the current code scope and indentation guides in VS Code. Navigate nested blocks and scope boundaries, switch focus modes and tune palettes for JavaScript, TypeScript, Python and JSON.",
   "publisher": "pydemia",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/pydemia/markyourscope.git"
@@ -132,7 +132,7 @@
             "all"
           ],
           "default": "off",
-          "description": "Show advisory marks for mixed tabs and spaces; all also marks indentation outside tab stops."
+          "description": "Show advisory marks for mixed tabs and spaces; all also marks indentation that does not align to the editor's indent size."
         },
         "markYourScope.focus.target": {
           "type": "string",

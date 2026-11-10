@@ -11,9 +11,11 @@ import {
     type DecorationSet,
 } from "./editor-decorations";
 import {
+    indentationCharacterAtVisualColumn,
     indentationBands,
     indentationGuides,
     indentationWarning,
+    scopeRailColumn,
     type IndentationWarnings,
 } from "./indentation";
 import { scopeEndOffset } from "./navigation";
@@ -206,6 +208,7 @@ export function activate(context: vscode.ExtensionContext): void {
         types: DecorationSet,
         current: LineSpan,
         background: "balanced" | "focus" | "none",
+        indentation: { tabSize: number; indentSize: number },
         layers?: readonly { scope: Scope; span: LineSpan }[],
     ): void {
         const document = editor.document;
@@ -253,22 +256,24 @@ export function activate(context: vscode.ExtensionContext): void {
             for (const span of spans) {
                 for (let line = span.startLine; line <= span.endLine; line++) {
                     const text = document.lineAt(line).text;
-                    if (text[column] === " " || text[column] === "\t") {
+                    const character = indentationCharacterAtVisualColumn(
+                        text, column, indentation.tabSize);
+                    if (character !== undefined) {
                         ranges.push(new vscode.Range(
-                            line, column, line, column + 1));
+                            line, character, line, character + 1));
                     }
                 }
             }
             return ranges;
         };
-        const railColumn = (scope: Scope) => document.lineAt(
-            document.positionAt(scope.start).line)
-            .firstNonWhitespaceCharacterIndex - 1;
+        const railColumn = (scope: Scope) => scopeRailColumn(
+            document.lineAt(document.positionAt(scope.start).line).text,
+            indentation.tabSize, indentation.indentSize);
         const railRanges = (scope: Scope, excluded: readonly LineSpan[]) => {
             const startLine = document.positionAt(scope.start).line;
             const endLine = document.positionAt(scope.end - 1).line;
             const column = railColumn(scope);
-            if (column < 0) return [];
+            if (column === undefined) return [];
             const spans = visibleLineIntersections(
                 { startLine, endLine }, editor.visibleRanges);
             let available = spans;
@@ -605,6 +610,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
         const tabSize = typeof editor.options.tabSize === "number"
             ? editor.options.tabSize : 4;
+        const indentSize = typeof editor.options.indentSize === "number"
+            ? editor.options.indentSize : tabSize;
+        const indentation = { tabSize, indentSize };
         const guides: vscode.Range[] = [];
         const evenBands: vscode.Range[] = [];
         const oddBands: vscode.Range[] = [];
@@ -628,7 +636,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     seen.add(line);
                     const text = document.lineAt(line).text;
                     const warning = indentationWarning(
-                        text, tabSize, warningsMode);
+                        text, tabSize, warningsMode, indentSize);
                     if (warning) {
                         warnings.push({
                             range: new vscode.Range(
@@ -641,7 +649,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     }
                     if (display.indentationStyle === "line") {
                         for (const guide of indentationGuides(
-                            [text], line, tabSize)) {
+                            [text], line, tabSize, indentSize)) {
                             guides.push(new vscode.Range(
                                 guide.line,
                                 guide.character,
@@ -686,7 +694,7 @@ export function activate(context: vscode.ExtensionContext): void {
             );
             paintRange(
                 editor, types, { startLine: start, endLine: end },
-                display.scopeBackground);
+                display.scopeBackground, indentation);
             if (editor === vscode.window.activeTextEditor) {
                 status.text = `Scope: 주변 L${start + 1}–L${end + 1}`;
                 status.show();
@@ -750,7 +758,7 @@ export function activate(context: vscode.ExtensionContext): void {
             endLine: document.positionAt(parent.end - 1).line,
         } : undefined;
         paintRange(editor, types, { startLine: start, endLine: end },
-            display.scopeBackground, layers);
+            display.scopeBackground, indentation, layers);
         if (editor === vscode.window.activeTextEditor) {
             const parentLabel = parentRange && parent
                 ? ` ↑ ${parent.kind} · L${parentRange.startLine + 1}–` +

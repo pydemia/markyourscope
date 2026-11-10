@@ -21,7 +21,9 @@ code, syntax token colors and other extensions' settings stay untouched.
   classes and control blocks. Expression mode also includes collections.
 - **Follow indentation.** Show guides as lines or alternating whitespace
   bands. Optional advisory marks point out mixed tabs and spaces or
-  indentation that does not line up with tab stops.
+  indentation that does not line up with the editor's indent size. Line guides
+  and scope rails use VS Code's resolved indent size; tabs use the editor's
+  tab size for their visual width.
 - **Move through nested code.** Focus a parent scope, jump to the current
   scope's start or end, or select the scope. The commands work with the
   active editor and preserve other cursors when selecting.
@@ -39,7 +41,7 @@ code, syntax token colors and other extensions' settings stay untouched.
 
 The mode sets defaults; an explicit indentation style setting takes priority.
 High contrast themes keep outside lines at full opacity. Rails appear only in
-available leading whitespace, so inline nested scopes rely on their
+available leading whitespace at a guide column, so inline nested scopes rely on their
 boundaries and the parent label in the status bar. Set
 `markYourScope.spotlight.depth` from 1 to 6 to choose how many distinct
 line-level scopes are shown; the default is 3. A one-line scope with no
@@ -99,7 +101,7 @@ displayed.
 | `markYourScope.enabled` | `true` | Enable all decorations |
 | `markYourScope.mode` | `balanced` | `balanced`, `structure`, `focus`, `off` |
 | `markYourScope.indentation.style` | `line` | `line`, `background`, `off`; an explicit value overrides the mode preset |
-| `markYourScope.indentation.warnings` | `off` | `mixed` marks mixed tabs/spaces; `all` also marks indentation outside tab stops |
+| `markYourScope.indentation.warnings` | `off` | `mixed` marks mixed tabs/spaces; `all` also marks indentation outside the editor's indent size |
 | `markYourScope.focus.target` | `block` | `block`, `expression`, `lines` |
 | `markYourScope.focus.contextLines` | `3` | Logical lines above and below the cursor in `lines` mode |
 | `markYourScope.spotlight.depth` | `3` | Distinct scope levels to show, including the current scope; 1–6 |
@@ -110,6 +112,8 @@ displayed.
 `auto` follows the active light, dark or high contrast theme. Invalid custom
 colors fall back one property at a time and produce a warning. Indentation
 warnings are advisory marks, not language diagnostics or automatic fixes.
+When a guide column falls inside a tab character, VS Code's native guide can
+show it; the extension does not place a line at a different character edge.
 
 The extension runs in the desktop extension host. This release was verified
 on Windows x64 with VS Code 1.140.0. Other platforms and remote setups need

@@ -205,6 +205,19 @@ exports.run = async function run() {
         "markYourScope.goToScopeStart");
     assert.equal(right.selection.active.line, 2,
         "ordinary movement resets parent focus");
+
+    const alignmentDocument = await vscode.workspace.openTextDocument({
+        language: "python",
+        content: "class Example:\n    def read(self):\n        return 1\n",
+    });
+    const alignmentEditor = await vscode.window.showTextDocument(
+        alignmentDocument, { viewColumn: vscode.ViewColumn.One });
+    alignmentEditor.options = { tabSize: 4, indentSize: 2 };
+    assert.equal(alignmentEditor.options.tabSize, 4);
+    assert.equal(alignmentEditor.options.indentSize, 2,
+        "guide spacing can differ from tab character width");
+    await pause();
+
     await configuration.update(
         "mode", undefined, vscode.ConfigurationTarget.Global);
     await configuration.update(

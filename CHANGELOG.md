@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Align scope rails with VS Code indentation guide columns instead of the whitespace character before code.
+- Use the editor's resolved `indentSize` for guide spacing and indentation warnings, while using `tabSize` for tab width.
+- Keep partial indentation guides and avoid placing a shifted extension guide inside a tab character.
+
 ## 0.4.0
 
 - Keep line-distinct ancestors visible through inline parentheses, calls, and assignments; one-line top-level scopes no longer dim the whole document.
